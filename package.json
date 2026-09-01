@@ -1,0 +1,20 @@
+{
+  "name": "shax-store-mobile",
+  "version": "1.0.0",
+  "description": "Shax Store Capacitor mobile app (Android/iOS) wrapping the existing Shax Store storefront + backend.",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync",
+    "sync:android": "cap sync android",
+    "sync:ios": "cap sync ios",
+    "open:android": "cap open android",
+    "open:ios": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/push-notifications": "^8.1.2"
+  }
+}

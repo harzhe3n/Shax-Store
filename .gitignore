@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Aider
+.aider*
+!.aider.conf.yml
+
+# Editors
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase / Google credentials
+firebase-service-account*.json
+google-services.json
+google-services.dev.json
+
+# Signing keys
+*.p8
+*.p12
+*.jks
+*.keystore
+
+# Backend uploads
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep

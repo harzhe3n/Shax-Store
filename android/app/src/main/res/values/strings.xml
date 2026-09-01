@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Shax Store</string>
+    <string name="title_activity_main">Shax Store</string>
+    <string name="package_name">com.shaxstore.app</string>
+    <string name="custom_url_scheme">com.shaxstore.app</string>
+</resources>

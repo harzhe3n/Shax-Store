@@ -1,0 +1,12 @@
+{
+  "appId": "com.shaxstore.app",
+  "appName": "Shax Store",
+  "webDir": "backend/public",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
