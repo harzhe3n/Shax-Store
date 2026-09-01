@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin Panel — Shax Store</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!--
+    PATHS NOTE:
+    Save this file as:  admin/index.html
+    admin.css should be in the same admin/ folder  → href="admin.css"
+    admin.js  should be in the same admin/ folder  → src="admin.js"
+    index.html is one level up                     → adminLogout() uses '../index.html'
+  -->
+  <link rel="stylesheet" href="admin.css">
+  <!-- Theme controller: sets data-theme before first paint (no flash) -->
+  <script src="../theme.js"></script>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     ADMIN LOGIN OVERLAY
+     (shown automatically if not authenticated as an admin)
+════════════════════════════════════════════════════════ -->
+<div id="admin-login-overlay" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:10px">
+        <i class="fas fa-shield-halved" style="color:#C9A84C;font-size:1.2rem"></i> Admin Login
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="al-form" novalidate style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group">
+          <label class="form-label" for="al-email">
+            <i class="fas fa-envelope" style="margin-right:6px;color:#C9A84C"></i>Email
+          </label>
+          <input class="form-input" id="al-email" type="email"
+                 placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="al-pass">
+            <i class="fas fa-lock" style="margin-right:6px;color:#C9A84C"></i>Password
+          </label>
+          <input class="form-input" id="al-pass" type="password"
+                 placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="al-error" class="form-error" style="color:#C0392B;font-size:.82rem"></div>
+        <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+        <p style="font-size:.75rem;color:#555;text-align:center">
+          Admin accounts are created via <code>npm run seed</code> — see your <code>.env</code> file.
+        </p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile sidebar backdrop -->
+<div id="sidebar-backdrop"></div>
+
+<!-- ════════════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════════ -->
+<aside id="admin-sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <!-- PLACE YOUR LOGO IMAGE HERE: public/assets/logo.png -->
+    <img src="../assets/logo.png" alt="Shax Store">
+    <div>
+      <div class="sidebar-logo-text">SHAX STORE</div>
+      <div class="sidebar-subtitle">Admin Panel</div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
+    <div class="sidebar-link active" data-page="dashboard">
+      <i class="fas fa-chart-line"></i> Dashboard
+    </div>
+    <div class="sidebar-link" data-page="products">
+      <i class="fas fa-box"></i> Products
+    </div>
+    <div class="sidebar-link" data-page="categories">
+      <i class="fas fa-tags"></i> Categories
+    </div>
+    <div class="sidebar-link" data-page="filters">
+      <i class="fas fa-filter"></i> Filters
+    </div>
+    <div class="sidebar-link" data-page="orders">
+      <i class="fas fa-shopping-cart"></i> Orders
+    </div>
+    <div class="sidebar-link" data-page="storage">
+      <i class="fas fa-warehouse"></i> Storage
+    </div>
+    <div class="sidebar-link" data-page="analytics">
+      <i class="fas fa-chart-pie"></i> Analytics
+    </div>
+    <div class="sidebar-link" data-page="sponsor-analytics">
+      <i class="fas fa-handshake"></i> Sponsor Analytics
+    </div>
+    <div class="sidebar-link" data-page="notifications">
+      <i class="fas fa-bullhorn"></i> Notifications
+    </div>
+    <div class="sidebar-link" data-page="push">
+      <i class="fas fa-tower-broadcast"></i> Push Messages
+    </div>
+
+    <div class="sidebar-section-label" style="margin-top:12px">System</div>
+    <div class="sidebar-link" data-page="settings">
+      <i class="fas fa-cog"></i> Settings
+    </div>
+    <div class="sidebar-link" onclick="adminLogout()" style="color:#C0392B">
+      <i class="fas fa-sign-out-alt" style="color:#C0392B"></i> Logout
+    </div>
+  </nav>
+
+  <!-- Admin User Info -->
+  <div class="sidebar-footer">
+    <div class="admin-user">
+      <div class="admin-avatar" id="admin-avatar">A</div>
+      <div class="admin-info">
+        <div class="admin-name" id="admin-name">Administrator</div>
+        <div class="admin-role">Super Admin</div>
+      </div>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ════════════════════════════════════════════════════════
+     MAIN CONTENT AREA
+════════════════════════════════════════════════════════ -->
+<main id="admin-main">
+
+  <!-- Top Bar -->
+  <div id="admin-topbar">
+    <div style="display:flex;align-items:center;gap:14px">
+      <!-- Mobile sidebar toggle -->
+      <button id="mobile-sidebar-toggle" class="btn btn-outline btn-sm"
+              style="display:none;padding:8px 10px">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="topbar-title">
+        <span id="page-title">Dashboard</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="theme-toggle" type="button" onclick="toggleTheme()"
+              title="Toggle light/dark theme" aria-label="Toggle light/dark theme" aria-pressed="false">
+        <i class="fas fa-moon"></i>
+      </button>
+      <a class="back-to-store" href="../index.html">
+        <i class="fas fa-store"></i> Back to Store
+      </a>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: DASHBOARD
+  ────────────────────────────────────────────────── -->
+  <div id="page-dashboard" class="admin-page active">
+
+    <!-- Money Summary Row -->
+    <div class="stats-grid">
+      <div class="stat-card" style="border-color:rgba(201,168,76,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Revenue</div>
+          <div class="stat-card-icon icon-gold"><i class="fas fa-coins"></i></div>
+        </div>
+        <div class="stat-card-num" id="dash-revenue">0 IQD</div>
+        <div class="stat-card-trend">From delivered orders</div>
+      </div>
+
+      <div class="stat-card" style="border-color:rgba(39,174,96,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Profit</div>
+          <div class="stat-card-icon icon-green"><i class="fas fa-arrow-trend-up"></i></div>
+        </div>
+        <div class="stat-card-num" id="dash-profit" style="color:#27ae60">0 IQD</div>
+        <div class="stat-card-trend">Earned on delivery</div>
+      </div>
+
+      <div class="stat-card" style="border-color:rgba(52,152,219,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Cost</div>
+          <div class="stat-card-icon icon-blue"><i class="fas fa-money-bill-wave"></i></div>
+        </div>
+        <div class="stat-card-num" id="dash-cost" style="color:#3498db">0 IQD</div>
+        <div class="stat-card-trend">Cost of delivered</div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Orders</div>
+          <div class="stat-card-icon icon-green"><i class="fas fa-shopping-cart"></i></div>
+        </div>
+        <div class="stat-card-num" id="dash-orders">0</div>
+        <div class="stat-card-trend">
+          <span id="dash-pending" style="color:#f39c12;font-weight:700">0</span> pending
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Products</div>
+          <div class="stat-card-icon icon-blue"><i class="fas fa-box-open"></i></div>
+        </div>
+        <div class="stat-card-num" id="dash-products">0</div>
+        <div class="stat-card-trend">In catalog</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Customers</div>
+          <div class="stat-card-icon icon-red"><i class="fas fa-users"></i></div>
+        </div>
+        <div class="stat-card-num" id="dash-users">0</div>
+        <div class="stat-card-trend">Registered accounts</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Sponsors</div>
+          <div class="stat-card-icon icon-gold"><i class="fas fa-handshake"></i></div>
+        </div>
+        <div class="stat-card-num" id="dash-sponsors">0</div>
+        <div class="stat-card-trend">Partner stores</div>
+      </div>
+    </div>
+
+    <!-- Recent Orders + Stock Alerts -->
+    <div class="dash-grid">
+
+      <!-- Recent Orders -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">Recent Orders</div>
+          <button class="btn btn-outline btn-sm"
+                  onclick="showPage('orders')">View All</button>
+        </div>
+        <div class="admin-card-body" style="padding:0">
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders">
+                <tr class="admin-loading-row"><td colspan="5">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stock Alerts -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <div class="admin-card-title">Stock Alerts</div>
+          <span class="badge badge-warning">Needs Attention</span>
+        </div>
+        <div class="admin-card-body" id="low-stock">
+          <p style="color:#555;padding:8px 0">Loading…</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: PRODUCTS
+  ────────────────────────────────────────────────── -->
+  <div id="page-products" class="admin-page">
+
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        Products <span style="color:#C9A84C;font-size:1rem">Management</span>
+      </div>
+      <div class="toolbar-actions">
+        <input type="text" id="products-search" class="topbar-search"
+               placeholder="Search products…" style="width:220px">
+        <button class="btn btn-gold" onclick="openAddProduct()">
+          <i class="fas fa-plus"></i> Add Product
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width:50px">ID</th>
+              <th style="width:60px">Image</th>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Rating</th>
+              <th>Stock</th>
+              <th>Added By</th>
+              <th>Badge</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="products-tbody">
+            <tr class="admin-loading-row"><td colspan="9">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: CATEGORIES
+  ────────────────────────────────────────────────── -->
+  <div id="page-categories" class="admin-page">
+
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        Categories <span style="color:#C9A84C;font-size:1rem">Management</span>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-gold" onclick="openAddCategory()">
+          <i class="fas fa-plus"></i> Add Category
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width:60px">Image</th>
+              <th>Name (EN)</th>
+              <th>Name (KU)</th>
+              <th>Name (AR)</th>
+              <th>Owner</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="categories-tbody">
+            <tr class="admin-loading-row"><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: TYPES (Shirts, Shorts, … — cross-store grouping)
+  ────────────────────────────────────────────────── -->
+  <div id="page-filters" class="admin-page">
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        Filters <span style="color:#C9A84C;font-size:1rem">Management</span>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-gold" onclick="openAddFilter()">
+          <i class="fas fa-plus"></i> Add Filter
+        </button>
+      </div>
+    </div>
+
+    <div class="tg-info" style="max-width:720px">
+      <i class="fas fa-info-circle"></i>
+      <span>
+        Types are a second way to group products (e.g. Shirts, Shorts, Hoodies).
+        A product belongs to one <strong>store</strong> (category) and one
+        <strong>type</strong>. On the shop, customers can tap a type to see that
+        kind of product across <strong>all</strong> stores.
+      </span>
+    </div>
+
+    <div class="admin-card" style="margin-top:16px">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width:60px">Image</th>
+              <th>Name (EN)</th>
+              <th>Name (KU)</th>
+              <th>Name (AR)</th>
+              <th>Products</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="filters-tbody">
+            <tr class="admin-loading-row"><td colspan="6">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: ORDERS
+  ────────────────────────────────────────────────── -->
+  <div id="page-orders" class="admin-page">
+
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        Orders <span style="color:#C9A84C;font-size:1rem">Management</span>
+      </div>
+      <div class="toolbar-actions">
+        <input type="text" id="orders-search" class="topbar-search"
+               placeholder="Search by name or ID…" style="width:220px">
+        <button class="btn btn-danger btn-sm" onclick="clearOrders()">
+          <i class="fas fa-trash-can"></i> <span id="clear-orders-label">Clear All</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Filter Tabs -->
+    <div class="order-status-filter" style="margin-bottom:20px;flex-wrap:wrap;gap:8px">
+      <button class="status-tab active" data-status="all">All</button>
+      <button class="status-tab" data-status="pending">Pending</button>
+      <button class="status-tab" data-status="processing">Processing</button>
+      <button class="status-tab" data-status="shipped">Shipped</button>
+      <button class="status-tab" data-status="delivered">Delivered</button>
+      <button class="status-tab" data-status="cancelled">Cancelled</button>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>City</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Assigned</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr class="admin-loading-row"><td colspan="8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: STORAGE
+  ────────────────────────────────────────────────── -->
+  <div id="page-storage" class="admin-page">
+
+    <!-- Storage Summary Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card" style="border-color:rgba(201,168,76,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Containers</div>
+          <div class="stat-card-icon icon-gold"><i class="fas fa-box"></i></div>
+        </div>
+        <div class="stat-card-num" id="storage-container-count">0</div>
+        <div class="stat-card-trend">Shipments total</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(155,89,182,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Units</div>
+          <div class="stat-card-icon" style="background:rgba(155,89,182,0.12);color:#9b59b6"><i class="fas fa-boxes-stacked"></i></div>
+        </div>
+        <div class="stat-card-num" id="storage-total-units" style="color:#9b59b6">0</div>
+        <div class="stat-card-trend">Across all sizes</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(52,152,219,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Cost</div>
+          <div class="stat-card-icon icon-blue"><i class="fas fa-money-bill-wave"></i></div>
+        </div>
+        <div class="stat-card-num" id="storage-total-cost" style="color:#3498db">0 IQD</div>
+        <div class="stat-card-trend">Product costs only</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(39,174,96,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Expected Profit</div>
+          <div class="stat-card-icon icon-green"><i class="fas fa-arrow-trend-up"></i></div>
+        </div>
+        <div class="stat-card-num" id="storage-total-profit" style="color:#27ae60">0 IQD</div>
+        <div class="stat-card-trend">If everything sells</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(243,156,18,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Delivery Costs</div>
+          <div class="stat-card-icon" style="background:rgba(243,156,18,0.12);color:#f39c12"><i class="fas fa-truck"></i></div>
+        </div>
+        <div class="stat-card-num" id="storage-total-delivery" style="color:#f39c12">0 IQD</div>
+        <div class="stat-card-trend">Shipping fees</div>
+      </div>
+    </div>
+
+    <!-- Overall Total -->
+    <div class="tg-config" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="form-section-title" style="margin:0;border:none;padding:0">Total Investment</div>
+          <div style="font-size:0.82rem;color:#888;margin-top:4px">Costs + Delivery = Total money invested in storage</div>
+        </div>
+        <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--gold)" id="storage-total-overall">0 IQD</div>
+      </div>
+    </div>
+
+    <!-- Tabs: Containers / All Items -->
+    <div class="order-status-filter" style="margin-bottom:20px;flex-wrap:wrap;gap:8px">
+      <button class="status-tab active" data-storage-tab="containers" onclick="switchStorageTab('containers')">
+        <i class="fas fa-box" style="margin-right:5px"></i> Containers
+      </button>
+      <button class="status-tab" data-storage-tab="all-items" onclick="switchStorageTab('all-items')">
+        <i class="fas fa-list" style="margin-right:5px"></i> All Items
+      </button>
+    </div>
+
+    <!-- Tab: Containers -->
+    <div id="storage-tab-containers">
+      <div class="page-toolbar">
+        <div class="page-toolbar-title">
+          Containers <span style="color:#C9A84C;font-size:1rem">Shipments</span>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-gold" onclick="openAddContainer()">
+            <i class="fas fa-plus"></i> New Container
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Items</th>
+                <th>Units</th>
+                <th>Cost</th>
+                <th>Profit</th>
+                <th>Delivery</th>
+                <th>Grand Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="containers-tbody">
+              <tr class="admin-loading-row"><td colspan="11">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: All Items -->
+    <div id="storage-tab-all-items" style="display:none">
+      <div class="page-toolbar">
+        <div class="page-toolbar-title">
+          All Items <span style="color:#C9A84C;font-size:1rem">in Storage</span>
+        </div>
+        <div class="toolbar-actions">
+          <input type="text" id="storage-items-search" class="topbar-search"
+                 placeholder="Search items…" style="width:220px">
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width:50px">Image</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Container</th>
+                <th>Sizes</th>
+                <th>Units</th>
+                <th>Cost</th>
+                <th>Selling</th>
+                <th>Profit</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="storage-items-tbody">
+              <tr class="admin-loading-row"><td colspan="10">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ──────────────────────────────────────────────────
+       PAGE: NOTIFICATIONS  (Admin Notification Sender)
+  ────────────────────────────────────────────────── -->
+  <div id="page-notifications" class="admin-page">
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        Notifications <span style="color:#C9A84C;font-size:1rem">Send to customers, sponsors & admins</span>
+      </div>
+    </div>
+
+    <div class="notif-grid">
+      <!-- ── Composer ───────────────────────────────────── -->
+      <div class="admin-card" style="margin:0">
+        <div class="admin-card-header">
+          <div class="admin-card-title"><i class="fas fa-pen-nib" style="color:var(--gold);margin-right:8px"></i>Notification Composer</div>
+        </div>
+        <div class="admin-card-body">
+          <form id="notif-form" novalidate style="display:flex;flex-direction:column;gap:18px">
+
+            <!-- Title -->
+            <div class="form-group">
+              <label class="form-label" for="notif-title">Title <span>*</span></label>
+              <input class="form-input" id="notif-title" type="text"
+                     maxlength="200" placeholder="e.g. New arrivals are here!"
+                     autocomplete="off">
+              <div class="form-error" id="notif-title-err"></div>
+            </div>
+
+            <!-- Message -->
+            <div class="form-group">
+              <label class="form-label" for="notif-message">Message <span>*</span></label>
+              <textarea class="form-textarea" id="notif-message" maxlength="5000"
+                        rows="5" placeholder="Write the body of the notification…"></textarea>
+              <div class="form-error" id="notif-message-err"></div>
+            </div>
+
+            <!-- Type + Audience -->
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="notif-type">Notification Type <span>*</span></label>
+                <select class="form-select" id="notif-type">
+                  <option value="general">General</option>
+                  <option value="product">Product</option>
+                  <option value="category">Category</option>
+                  <option value="order">Order</option>
+                  <option value="account">Account</option>
+                  <option value="promotion">Promotion</option>
+                  <option value="system">System</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="notif-audience">Target Audience <span>*</span></label>
+                <select class="form-select" id="notif-audience">
+                  <option value="all">All Customers / Users</option>
+                  <option value="role_customer">All Customers (customer role)</option>
+                  <option value="role_sponsor">All Sponsors</option>
+                  <option value="role_admin">All Admins</option>
+                  <option value="role_super_admin">All Super Admins</option>
+                  <option value="user">Specific User</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Audience description -->
+            <div class="tg-info" id="notif-audience-desc">
+              <i class="fas fa-info-circle"></i>
+              <span id="notif-audience-desc-text"></span>
+            </div>
+
+            <!-- Specific user selector -->
+            <div class="form-group" id="notif-user-group" style="display:none">
+              <label class="form-label" for="notif-user-search">Search User by Name / Email</label>
+              <input class="form-input" id="notif-user-search" type="text"
+                     placeholder="Type to search users…" autocomplete="off">
+              <div class="notif-user-results" id="notif-user-results"></div>
+              <div class="notif-selected-user" id="notif-selected-user" style="display:none"></div>
+              <div class="form-error" id="notif-user-err"></div>
+            </div>
+
+            <!-- Inline result -->
+            <div id="notif-result" style="display:none"></div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <button type="button" class="btn btn-gold" id="notif-send-btn"
+                      onclick="submitNotification()">
+                <i class="fas fa-paper-plane"></i> Send Notification
+              </button>
+              <button type="button" class="btn btn-outline" onclick="resetComposer()">
+                <i class="fas fa-eraser"></i> Clear
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── Live Preview ────────────────────────────────── -->
+      <div class="admin-card notif-preview-card" style="margin:0">
+        <div class="admin-card-header">
+          <div class="admin-card-title"><i class="fas fa-eye" style="color:var(--gold);margin-right:8px"></i>Preview</div>
+          <span class="badge badge-info" style="font-size:.65rem">Visual only — nothing is sent</span>
+        </div>
+        <div class="admin-card-body">
+          <div class="notif-preview-box" id="notif-preview">
+            <div class="notif-preview-type" id="notif-preview-type">General</div>
+            <div class="notif-preview-title" id="notif-preview-title">Notification title</div>
+            <div class="notif-preview-message" id="notif-preview-message">Notification message appears here.</div>
+            <div class="notif-preview-audience" id="notif-preview-audience">
+              <i class="fas fa-users"></i> All Customers / Users
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: PUSH (native device push diagnostics & test push)
+  ────────────────────────────────────────────────── -->
+  <div id="page-push" class="admin-page">
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        Push Messages <span style="color:#C9A84C;font-size:1rem">Native device notifications (FCM / APNs)</span>
+      </div>
+    </div>
+
+    <div class="push-grid">
+      <!-- ── Status ───────────────────────────────────── -->
+      <div class="admin-card" style="margin:0">
+        <div class="admin-card-header">
+          <div class="admin-card-title"><i class="fas fa-tower-broadcast" style="color:var(--gold);margin-right:8px"></i>Push Status</div>
+          <span class="badge badge-info" id="push-delivery-badge">Loading…</span>
+        </div>
+        <div class="admin-card-body">
+          <div id="push-status-body">
+            <p style="color:#555">Loading push diagnostics…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Test push ────────────────────────────────── -->
+      <div class="admin-card" style="margin:0">
+        <div class="admin-card-header">
+          <div class="admin-card-title"><i class="fas fa-paper-plane" style="color:var(--gold);margin-right:8px"></i>Send Test Push</div>
+        </div>
+        <div class="admin-card-body">
+          <form id="push-test-form" novalidate style="display:flex;flex-direction:column;gap:18px">
+            <div class="form-group">
+              <label class="form-label" for="push-test-title">Title</label>
+              <input class="form-input" id="push-test-title" type="text"
+                     maxlength="200" placeholder="e.g. Hello from the store" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="push-test-message">Message <span>*</span></label>
+              <textarea class="form-textarea" id="push-test-message" maxlength="300"
+                        rows="3" placeholder="Short test message…"></textarea>
+              <div class="form-error" id="push-test-message-err"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="push-test-target">Target</label>
+              <select class="form-select" id="push-test-target">
+                <option value="all">All users with registered devices</option>
+                <option value="role_customer">All customers with devices</option>
+                <option value="role_sponsor">All sponsors with devices</option>
+                <option value="role_admin">All admin accounts</option>
+                <option value="user">A specific user</option>
+                <option value="token">A single device token</option>
+              </select>
+            </div>
+            <div class="tg-info" id="push-target-desc">
+              <i class="fas fa-info-circle"></i>
+              <span id="push-target-desc-text"></span>
+            </div>
+            <div class="form-group" id="push-user-group" style="display:none">
+              <label class="form-label" for="push-user-search">Search User by Name / Email</label>
+              <input class="form-input" id="push-user-search" type="text"
+                     placeholder="Type to search users…" autocomplete="off">
+              <div class="notif-user-results" id="push-user-results"></div>
+              <div class="notif-selected-user" id="push-selected-user" style="display:none"></div>
+              <div class="form-error" id="push-user-err"></div>
+            </div>
+            <div class="form-group" id="push-token-group" style="display:none">
+              <label class="form-label" for="push-test-token">Device Token</label>
+              <input class="form-input" id="push-test-token" type="text" maxlength="512"
+                     placeholder="FCM registration token" autocomplete="off">
+              <div class="form-error" id="push-token-err"></div>
+            </div>
+            <div id="push-test-result" style="display:none"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <button type="button" class="btn btn-gold" id="push-test-btn" onclick="submitPushTest()">
+                <i class="fas fa-paper-plane"></i> Run Test
+              </button>
+              <button type="button" class="btn btn-outline" onclick="resetPushComposer()">
+                <i class="fas fa-eraser"></i> Clear
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────────────────
+       PAGE: SETTINGS
+  ────────────────────────────────────────────────── -->
+  <div id="page-settings" class="admin-page">
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        Settings <span style="color:#C9A84C;font-size:1rem">& Configuration</span>
+      </div>
+    </div>
+
+    <div class="settings-grid" style="max-width:900px">
+
+      <!-- Telegram Bot Config — SUPER ADMIN ONLY -->
+      <div class="tg-config" id="telegram-config-section" style="grid-column:1/-1">
+        <div class="form-section-title">
+          <i class="fab fa-telegram" style="color:#2196F3;margin-right:8px"></i>Telegram Bot
+          <span class="badge badge-gold" id="telegram-super-badge" style="margin-left:8px;font-size:.65rem;display:none">Super Admin only</span>
+        </div>
+        <div class="tg-info">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            Orders are sent automatically via Telegram bot. Create a bot with
+            <strong>@BotFather</strong>, get the token, then message your bot once to get
+            your Chat ID via <strong>@userinfobot</strong>. The bot token is stored server-side
+            only and is never sent back to this page.
+            <br><br>
+            <i class="fas fa-image" style="color:#C9A84C"></i>
+            <strong>Product photos:</strong> to include product images in order messages,
+            set <code>PUBLIC_BASE_URL</code> in your <code>.env</code> to your live site address
+            (e.g. <code>https://yourstore.com</code>). Photos can't be sent from a local
+            <code>localhost</code> address — orders will then arrive as text only.
+          </span>
+        </div>
+        <div class="form-grid" style="margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label" for="tg-token">Bot Token</label>
+            <input class="form-input" id="tg-token" type="text"
+                   placeholder="Leave blank to keep current token" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="tg-chat">Chat ID</label>
+            <input class="form-input" id="tg-chat" type="text"
+                   placeholder="-1001234567890">
+          </div>
+        </div>
+        <div id="tg-status" style="font-size:.78rem;color:#666;margin-bottom:14px"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="saveTelegramSettings()">
+            <i class="fas fa-save"></i> Save Settings
+          </button>
+          <button class="btn btn-outline" onclick="testTelegram()">
+            <i class="fab fa-telegram"></i> Send Test
+          </button>
+        </div>
+        
+        <!-- Notification Organization Section -->
+        <div class="form-section-title" style="margin-top:24px">
+          <i class="fas fa-bell" style="color:#C9A84C;margin-right:8px"></i>Notifications Overview
+        </div>
+        <p style="font-size:0.85rem;margin-bottom:16px;color:#777">
+          When an order changes status, automatically send a Telegram notification to your chat.
+          Configuration is done below in the Telegram Bot section.
+        </p>
+        <div class="tg-info" style="margin-top:12px">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            <strong>Status Updates:</strong> Automatic notifications sent when:
+            <ul style="margin:8px 0 8px 20px;padding:0">
+              <li>Order confirmed</li>
+              <li>Order processing</li>
+              <li>Order shipped</li>
+              <li>Order delivered</li>
+            </ul>
+          </span>
+        </div>
+      </div>
+
+      <!-- Minimum Order Amount — any admin -->
+      <div class="tg-config" style="grid-column:1/-1">
+        <div class="form-section-title">
+          <i class="fas fa-coins" style="color:#C9A84C;margin-right:8px"></i>Minimum Order Amount
+        </div>
+        <div class="tg-info">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            Set the smallest order total (in IQD) a customer can place. Orders below
+            this are blocked with a message. Set to <strong>0</strong> for no minimum.
+            This applies to the whole cart across all stores.
+          </span>
+        </div>
+        <div class="form-grid" style="margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label" for="min-order-input">Minimum Order (IQD)</label>
+            <input class="form-input" id="min-order-input" type="number" min="0" step="500" placeholder="0">
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="saveMinOrder()">
+          <i class="fas fa-save"></i> Save Minimum
+        </button>
+      </div>
+
+      <!-- Sponsor Commission % — any admin -->
+      <div class="tg-config" style="grid-column:1/-1">
+        <div class="form-section-title">
+          <i class="fas fa-handshake" style="color:#C9A84C;margin-right:8px"></i>Sponsor Commission
+        </div>
+        <div class="tg-info">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            Percentage of each sponsor's profit that the store takes as commission.
+            The remaining amount goes to the sponsor. Default is <strong>20%</strong>.
+            Applies to all sponsors equally.
+          </span>
+        </div>
+        <div class="form-grid" style="margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label" for="commission-pct-input">Commission %</label>
+            <input class="form-input" id="commission-pct-input" type="number" min="0" max="100" step="1" placeholder="20">
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="saveCommissionPct()">
+          <i class="fas fa-save"></i> Save Commission
+        </button>
+      </div>
+
+      <!-- Admin Credentials -->
+      <div class="tg-config">
+        <div class="form-section-title">
+          <i class="fas fa-shield-alt" style="color:#C9A84C;margin-right:8px"></i>Admin Credentials
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label" for="admin-email">Admin Email</label>
+          <input class="form-input" id="admin-email" type="email"
+                 placeholder="your-new-email@example.com">
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label" for="admin-pass">New Password</label>
+          <input class="form-input" id="admin-pass" type="password"
+                 placeholder="At least 8 characters">
+        </div>
+        <button class="btn btn-gold" onclick="saveAdminCredentials()">
+          <i class="fas fa-save"></i> Update Credentials
+        </button>
+      </div>
+
+      <!-- Store Info -->
+      <div class="tg-config">
+        <div class="form-section-title">
+          <i class="fas fa-store" style="color:#C9A84C;margin-right:8px"></i>Store Info
+        </div>
+        <p style="color:#555;font-size:.88rem;line-height:1.7">
+          <strong style="color:#ccc">Version:</strong> Shax Store v3.0<br>
+          <strong style="color:#ccc">Storage:</strong> MySQL database<br>
+          <strong style="color:#ccc">Orders:</strong> Telegram bot notification<br>
+          <strong style="color:#ccc">Languages:</strong> English · Kurdish · Arabic
+        </p>
+      </div>
+
+      <!-- Shipping Info (public page content) -->
+      <div class="tg-config" style="grid-column:1/-1">
+        <div class="form-section-title">
+          <i class="fas fa-truck-fast" style="color:#C9A84C;margin-right:8px"></i>Shipping Info Page
+        </div>
+        <div class="tg-info">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            This text is shown on the public <strong>Shipping Info</strong> page
+            (linked in the footer). Write your delivery times, costs, areas covered,
+            and any other details customers should know. Line breaks are preserved.
+          </span>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label class="form-label" for="shipping-text">Shipping Information</label>
+          <textarea class="form-textarea" id="shipping-text" style="min-height:200px"
+                    placeholder="e.g. We deliver across Kurdistan within 2–4 business days. Delivery fee: 5,000 IQD. Cash on delivery available…"></textarea>
+        </div>
+        <button class="btn btn-gold" onclick="saveShippingInfo()">
+          <i class="fas fa-save"></i> Save Shipping Info
+        </button>
+      </div>
+
+      <!-- Sponsor Management -->
+      <div class="tg-config" style="grid-column:1/-1">
+        <div class="form-section-title">
+          <i class="fas fa-handshake" style="color:#C9A84C;margin-right:8px"></i>Sponsor Accounts
+        </div>
+        <div class="tg-info">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            Create accounts for sponsor partners. A sponsor logs in at
+            <code>/sponsor/</code> and can add their own products and create
+            <strong>one</strong> store category (their brand). They cannot see orders,
+            settings, or other sponsors' products. Sponsor products are sold at the
+            price they set (no store markup/profit applied).
+          </span>
+        </div>
+
+        <div class="form-grid" style="margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label" for="sp-name">Sponsor Name <span style="color:#C0392B">*</span></label>
+            <input class="form-input" id="sp-name" type="text" placeholder="e.g. Ali's Gym Store">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sp-email">Login Email <span style="color:#C0392B">*</span></label>
+            <input class="form-input" id="sp-email" type="email" placeholder="sponsor@example.com" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sp-pass">Password <span style="color:#C0392B">*</span></label>
+            <input class="form-input" id="sp-pass" type="text" placeholder="At least 8 characters" autocomplete="off">
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <button class="btn btn-gold" onclick="createSponsor()" style="margin-top:auto">
+              <i class="fas fa-user-plus"></i> Create Sponsor
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-table-wrap" style="margin-top:8px">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Store</th>
+                <th>Products</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sponsors-tbody">
+              <tr class="admin-loading-row"><td colspan="5">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Management — SUPER ADMIN ONLY (hidden for regular admins) -->
+      <div class="tg-config" id="admin-mgmt-section" style="grid-column:1/-1;display:none">
+        <div class="form-section-title">
+          <i class="fas fa-user-shield" style="color:#C9A84C;margin-right:8px"></i>Admin Accounts
+          <span class="badge badge-gold" style="margin-left:8px;font-size:.65rem">Super Admin only</span>
+        </div>
+        <div class="tg-info">
+          <i class="fas fa-info-circle"></i>
+          <span>
+            Create additional admin accounts. Regular admins can manage products,
+            categories, orders, sponsors and shipping info — but they
+            <strong>cannot</strong> create other admins or change the Telegram bot token.
+            Only you (super admin) can.
+          </span>
+        </div>
+
+        <div class="form-grid" style="margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label" for="adm-name">Admin Name <span style="color:#C0392B">*</span></label>
+            <input class="form-input" id="adm-name" type="text" placeholder="e.g. Store Manager">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adm-email">Login Email <span style="color:#C0392B">*</span></label>
+            <input class="form-input" id="adm-email" type="email" placeholder="admin2@example.com" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="adm-pass">Password <span style="color:#C0392B">*</span></label>
+            <input class="form-input" id="adm-pass" type="text" placeholder="At least 8 characters" autocomplete="off">
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <button class="btn btn-gold" onclick="createAdmin()" style="margin-top:auto">
+              <i class="fas fa-user-plus"></i> Create Admin
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-table-wrap" style="margin-top:8px">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admins-tbody">
+              <tr class="admin-loading-row"><td colspan="4">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ════════════════════════════════════════════════════════
+     PRODUCT MODAL
+════════════════════════════════════════════════════════ -->
+<div id="product-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="product-modal-title">Add Product</div>
+      <button class="modal-close-btn" data-close-modal="product-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="p-id">
+      <input type="hidden" id="p-image-url">
+
+      <!-- Basic Info -->
+      <div class="form-section-title" style="margin-top:0">Basic Information</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Name (EN) <span>*</span></label>
+          <input class="form-input" id="p-name" type="text" placeholder="Product name in English">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name (Kurdish)</label>
+          <input class="form-input" id="p-name-ku" type="text" placeholder="ناوی بەرهەم بە کوردی" dir="rtl">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name (Arabic)</label>
+          <input class="form-input" id="p-name-ar" type="text" placeholder="اسم المنتج بالعربية" dir="rtl">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category <span>*</span></label>
+          <select class="form-select" id="p-category">
+            <option value="">Select category…</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Filters <span style="color:#666;font-weight:400;font-size:.78rem">— tap to tag this product (can pick many)</span></label>
+          <div id="p-filters-box" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"><span style="color:#666;font-size:.82rem">Loading…</span></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Original Price (IQD) <span>*</span></label>
+          <input class="form-input" id="p-cost" type="number" placeholder="20000" min="0" step="250"
+                 oninput="recalcSellingPrice()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Profit (IQD)</label>
+          <input class="form-input" id="p-profit" type="number" placeholder="5000" min="0" step="250"
+                 oninput="recalcSellingPrice()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Selling Price (IQD)</label>
+          <input class="form-input" id="p-selling" type="text" readonly
+                 style="background:#1a1a1a;color:#C9A84C;font-weight:700" value="0 IQD">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Old Price (IQD)</label>
+          <input class="form-input" id="p-old-price" type="number" placeholder="35000" min="0" step="250">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Shipping (IQD) <span style="color:#666;font-weight:400;font-size:.78rem">— 0 = Free</span></label>
+          <input class="form-input" id="p-shipping" type="number" placeholder="0" min="0" step="250" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Badge</label>
+          <select class="form-select" id="p-badge">
+            <option value="">No Badge</option>
+            <option value="new">New</option>
+            <option value="bestseller">Best Seller</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Status</label>
+          <select class="form-select" id="p-stock-mode" onchange="toggleStockQty()">
+            <option value="hidden">In Stock (don't show amount)</option>
+            <option value="count">In Stock (show exact amount)</option>
+            <option value="out">Out of Stock</option>
+          </select>
+        </div>
+        <div class="form-group" id="p-stock-qty-group" style="display:none;grid-column:1/-1">
+          <label class="form-label">Stock per Size <span style="color:#666;font-weight:400;font-size:.78rem">— set how many of each size you have</span></label>
+          <div id="p-size-stock-grid" style="display:flex;flex-wrap:wrap;gap:12px">
+            <!-- filled by renderSizeStockInputs() based on the checked sizes -->
+          </div>
+        </div>
+        <!-- kept for compatibility; the real availability comes from stock mode -->
+        <input type="hidden" id="p-in-stock" value="1">
+        <input type="hidden" id="p-stock-qty" value="0">
+      </div>
+
+      <!-- Descriptions -->
+      <div class="form-section-title" style="margin-top:6px">Descriptions</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Description (EN)</label>
+          <textarea class="form-textarea" id="p-desc"
+                    placeholder="Product description in English"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (Kurdish)</label>
+          <textarea class="form-textarea" id="p-desc-ku" dir="rtl"
+                    placeholder="وەسفی بەرهەم بە کوردی"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (Arabic)</label>
+          <textarea class="form-textarea" id="p-desc-ar" dir="rtl"
+                    placeholder="وصف المنتج بالعربية"></textarea>
+        </div>
+      </div>
+
+      <!-- Sizes -->
+      <div class="form-section-title" style="margin-top:6px">Available Sizes</div>
+      <div class="sizes-grid">
+        <div class="size-stock-item">
+          <div class="size-stock-label">S</div>
+          <label style="display:flex;justify-content:center">
+            <input type="checkbox" class="size-check" value="S" checked
+                   style="width:18px;height:18px;accent-color:#C9A84C">
+          </label>
+        </div>
+        <div class="size-stock-item">
+          <div class="size-stock-label">M</div>
+          <label style="display:flex;justify-content:center">
+            <input type="checkbox" class="size-check" value="M" checked
+                   style="width:18px;height:18px;accent-color:#C9A84C">
+          </label>
+        </div>
+        <div class="size-stock-item">
+          <div class="size-stock-label">L</div>
+          <label style="display:flex;justify-content:center">
+            <input type="checkbox" class="size-check" value="L" checked
+                   style="width:18px;height:18px;accent-color:#C9A84C">
+          </label>
+        </div>
+        <div class="size-stock-item">
+          <div class="size-stock-label">XL</div>
+          <label style="display:flex;justify-content:center">
+            <input type="checkbox" class="size-check" value="XL" checked
+                   style="width:18px;height:18px;accent-color:#C9A84C">
+          </label>
+        </div>
+        <div class="size-stock-item">
+          <div class="size-stock-label">XXL</div>
+          <label style="display:flex;justify-content:center">
+            <input type="checkbox" class="size-check" value="XXL" checked
+                   style="width:18px;height:18px;accent-color:#C9A84C">
+          </label>
+        </div>
+      </div>
+
+      <!-- ── COLORS / IMAGES ─────────────────────────────────── -->
+      <div class="form-section-title" style="margin-top:16px">
+        Product Images <span style="color:#666;font-weight:400;font-size:.78rem">— Each color needs an image. Add a color name, pick the color, and upload an image for it.</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px">
+        <div class="form-group" style="margin:0;flex:1;min-width:140px">
+          <label class="form-label" style="font-size:.78rem">Color name</label>
+          <input class="form-input" id="color-name-input" type="text" placeholder="e.g. Red">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label" style="font-size:.78rem">Color</label>
+          <input id="color-hex-input" type="color" value="#C9A84C"
+                 style="width:54px;height:42px;padding:2px;border:1px solid #333;border-radius:8px;background:#1a1a1a;cursor:pointer">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label" style="font-size:.78rem">Image <span style="color:#C0392B">*</span></label>
+          <label class="btn btn-outline" for="color-image-file" style="padding:9px 14px;cursor:pointer;white-space:nowrap">
+            <i class="fas fa-image"></i> <span id="color-image-label">Upload</span>
+          </label>
+          <input type="file" id="color-image-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+          <input type="hidden" id="color-image-url">
+        </div>
+        <button type="button" class="btn btn-gold" onclick="addColor()" style="padding:9px 16px">
+          <i class="fas fa-plus"></i> Add
+        </button>
+      </div>
+      <div id="colors-list" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+      <p style="font-size:.75rem;color:#666;margin-top:8px"><i class="fas fa-info-circle" style="margin-right:4px"></i>The first color's image will be the main product image shown on the store.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="product-modal">Cancel</button>
+      <button class="btn btn-gold" id="p-save-btn" onclick="saveProduct()">
+        <i class="fas fa-save"></i> Save Product
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     CATEGORY MODAL
+════════════════════════════════════════════════════════ -->
+<div id="category-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="cat-modal-title">Add Category</div>
+      <button class="modal-close-btn" data-close-modal="category-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cat-id">
+      <input type="hidden" id="cat-image-url">
+
+      <!-- Image Upload -->
+      <div class="form-section-title">Category Image</div>
+      <label class="img-upload-area" for="cat-image-file">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p><span>Click to upload</span> or drag an image here</p>
+        <p style="font-size:.72rem;margin-top:4px">JPG, PNG, WEBP or GIF — max 5MB</p>
+        <input type="file" id="cat-image-file" accept="image/jpeg,image/png,image/webp,image/gif">
+      </label>
+      <img id="cat-img-preview" alt="Preview">
+      <div class="upload-status" id="cat-upload-status"></div>
+
+      <div class="form-grid" style="margin-top:6px">
+        <div class="form-group">
+          <label class="form-label">Name (EN) <span style="color:#C0392B">*</span></label>
+          <input class="form-input" id="cat-name" type="text" placeholder="Category name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name (Kurdish)</label>
+          <input class="form-input" id="cat-name-ku" type="text" placeholder="ناوی جۆر" dir="rtl">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name (Arabic)</label>
+          <input class="form-input" id="cat-name-ar" type="text" placeholder="اسم الفئة" dir="rtl">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="category-modal">Cancel</button>
+      <button class="btn btn-gold" id="cat-save-btn" onclick="saveCategory()">
+        <i class="fas fa-save"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     FILTER MODAL
+════════════════════════════════════════════════════════ -->
+<div id="filter-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="filter-modal-title">Add Filter</div>
+      <button class="modal-close-btn" data-close-modal="filter-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="filter-id">
+      <input type="hidden" id="filter-image-url">
+
+      <div class="form-section-title">Filter Image (optional)</div>
+      <label class="img-upload-area" for="filter-image-file">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p><span>Click to upload</span> or drag an image here</p>
+        <p style="font-size:.72rem;margin-top:4px">JPG, PNG, WEBP or GIF — max 5MB</p>
+        <input type="file" id="filter-image-file" accept="image/jpeg,image/png,image/webp,image/gif">
+      </label>
+      <img id="filter-img-preview" alt="Preview">
+      <div class="upload-status" id="filter-upload-status"></div>
+
+      <div class="form-grid" style="margin-top:6px">
+        <div class="form-group">
+          <label class="form-label">Name (EN) <span style="color:#C0392B">*</span></label>
+          <input class="form-input" id="filter-name" type="text" placeholder="e.g. Summer">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name (Kurdish)</label>
+          <input class="form-input" id="filter-name-ku" type="text" placeholder="ناوی فلتەر" dir="rtl">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name (Arabic)</label>
+          <input class="form-input" id="filter-name-ar" type="text" placeholder="اسم الفلتر" dir="rtl">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="filter-modal">Cancel</button>
+      <button class="btn btn-gold" id="filter-save-btn" onclick="saveFilter()">
+        <i class="fas fa-save"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     ORDER DETAIL MODAL
+════════════════════════════════════════════════════════ -->
+<div id="order-detail-modal" class="modal-overlay">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title">Order Details</div>
+      <button class="modal-close-btn" data-close-modal="order-detail-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="order-detail-body">
+      <!-- Dynamically rendered by admin.js viewOrder() -->
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     CONTAINER MODAL (Add / Edit)
+════════════════════════════════════════════════════════ -->
+<div id="container-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="container-modal-title">New Container</div>
+      <button class="modal-close-btn" data-close-modal="container-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ct-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Container # <span>*</span></label>
+          <input class="form-input" id="ct-number" type="number" min="1" step="1" placeholder="e.g. 1, 2, 3">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Container Name <span>*</span></label>
+          <input class="form-input" id="ct-name" type="text" placeholder="e.g. Order from China - Jan 2024">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Origin Country</label>
+          <input class="form-input" id="ct-country" type="text" placeholder="e.g. China, Turkey, UAE">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Cost (IQD)</label>
+          <input class="form-input" id="ct-delivery" type="number" placeholder="0" min="0" step="250" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="ct-status">
+            <option value="pending">Pending (In Transit)</option>
+            <option value="received">Received</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Notes</label>
+          <textarea class="form-textarea" id="ct-notes" placeholder="Optional notes about this shipment…" style="min-height:80px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="container-modal">Cancel</button>
+      <button class="btn btn-gold" id="ct-save-btn" onclick="saveContainer()">
+        <i class="fas fa-save"></i> Save Container
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     CONTAINER DETAIL MODAL (View + Manage Items)
+════════════════════════════════════════════════════════ -->
+<div id="container-detail-modal" class="modal-overlay">
+  <div class="modal-box wide" style="max-width:900px">
+    <div class="modal-header">
+      <div class="modal-title" id="ct-detail-title">Container Details</div>
+      <button class="modal-close-btn" data-close-modal="container-detail-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="ct-detail-body">
+      <!-- Filled dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     CONTAINER ITEM MODAL (Add / Edit Item)
+════════════════════════════════════════════════════════ -->
+<div id="container-item-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="ci-modal-title">Add Item</div>
+      <button class="modal-close-btn" data-close-modal="container-item-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ci-id">
+      <input type="hidden" id="ci-container-id">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Link to Existing Product <span style="color:#666;font-weight:400;font-size:.78rem">— optional</span></label>
+          <select class="form-select" id="ci-product-id" onchange="onCiProductChange()">
+            <option value="">None — add as new product</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Product Name <span>*</span></label>
+          <input class="form-input" id="ci-product-name" type="text" placeholder="e.g. Nike Air Max 90">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="ci-category">
+            <option value="">Select category…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cost Price / unit (IQD)</label>
+          <input class="form-input" id="ci-cost" type="number" min="0" step="250" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Selling Price / unit (IQD)</label>
+          <input class="form-input" id="ci-selling" type="number" min="0" step="250" placeholder="0">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Sizes / Quantities <span>*</span></label>
+          <div id="ci-sizes-container" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
+            <!-- Size rows added dynamically -->
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+            <select class="form-select" id="ci-size-select" style="width:120px">
+              <option value="XS">XS</option><option value="S">S</option>
+              <option value="M" selected>M</option><option value="L">L</option>
+              <option value="XL">XL</option><option value="XXL">XXL</option>
+              <option value="3XL">3XL</option><option value="4XL">4XL</option>
+              <option value="5XL">5XL</option><option value="ONE SIZE">ONE SIZE</option>
+            </select>
+            <input class="form-input" id="ci-size-qty" type="number" min="0" value="1" style="width:80px">
+            <button type="button" class="btn btn-outline btn-sm" onclick="addCiSizeRow()">
+              <i class="fas fa-plus"></i> Add Size
+            </button>
+          </div>
+          <div style="font-size:.75rem;color:#666;margin-top:6px">Total: <strong id="ci-total-qty">0</strong> units</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="container-item-modal">Cancel</button>
+      <button class="btn btn-gold" id="ci-save-btn" onclick="saveContainerItem()">
+        <i class="fas fa-save"></i> Save Item
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE: ANALYTICS (Admin Performance)
+════════════════════════════════════════════════════════ -->
+<div id="page-analytics" class="admin-page">
+
+  <div class="page-toolbar">
+    <div class="page-toolbar-title">
+      Admin Analytics <span style="color:#C9A84C;font-size:1rem">Performance & Profits</span>
+    </div>
+  </div>
+
+  <!-- Super Admin Global Totals -->
+  <div id="analytics-global" style="display:none">
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card" style="border-color:rgba(39,174,96,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Grand Profit</div>
+          <div class="stat-card-icon icon-green"><i class="fas fa-arrow-trend-up"></i></div>
+        </div>
+        <div class="stat-card-num" id="analytics-global-profit" style="color:#27ae60">0 IQD</div>
+        <div class="stat-card-trend">All admins combined</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(52,152,219,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Grand Cost</div>
+          <div class="stat-card-icon icon-blue"><i class="fas fa-money-bill-wave"></i></div>
+        </div>
+        <div class="stat-card-num" id="analytics-global-cost" style="color:#3498db">0 IQD</div>
+        <div class="stat-card-trend">Orders + Products + Storage</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(201,168,76,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Order Revenue</div>
+          <div class="stat-card-icon icon-gold"><i class="fas fa-coins"></i></div>
+        </div>
+        <div class="stat-card-num" id="analytics-global-revenue">0 IQD</div>
+        <div class="stat-card-trend">Delivered orders</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(243,156,18,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Delivery Costs</div>
+          <div class="stat-card-icon" style="background:rgba(243,156,18,0.12);color:#f39c12"><i class="fas fa-truck"></i></div>
+        </div>
+        <div class="stat-card-num" id="analytics-global-delivery" style="color:#f39c12">0 IQD</div>
+        <div class="stat-card-trend">All storage shipping</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-Admin Cards -->
+  <div id="analytics-admins-grid" class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+    <div class="admin-loading-row" style="padding:40px;text-align:center;color:#888">Loading analytics…</div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     PAGE: SPONSOR ANALYTICS
+════════════════════════════════════════════════════════════ -->
+<div id="page-sponsor-analytics" class="admin-page">
+
+  <div class="page-toolbar">
+    <div class="page-toolbar-title">
+      Sponsor Analytics <span style="color:#C9A84C;font-size:1rem">Performance & Commission</span>
+    </div>
+  </div>
+
+  <!-- Global Sponsor Totals -->
+  <div id="sa-global" style="display:none">
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card" style="border-color:rgba(201,168,76,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Revenue</div>
+          <div class="stat-card-icon icon-gold"><i class="fas fa-coins"></i></div>
+        </div>
+        <div class="stat-card-num" id="sa-global-revenue" style="color:var(--gold)">0 IQD</div>
+        <div class="stat-card-trend">All sponsor products (delivered)</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(39,174,96,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Total Profit</div>
+          <div class="stat-card-icon icon-green"><i class="fas fa-arrow-trend-up"></i></div>
+        </div>
+        <div class="stat-card-num" id="sa-global-profit" style="color:#27ae60">0 IQD</div>
+        <div class="stat-card-trend">Sponsor profit before commission</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(192,57,43,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Store Commission</div>
+          <div class="stat-card-icon" style="background:rgba(192,57,43,0.12);color:#c0392b"><i class="fas fa-percent"></i></div>
+        </div>
+        <div class="stat-card-num" id="sa-global-commission" style="color:#c0392b">0 IQD</div>
+        <div class="stat-card-trend"><span id="sa-commission-pct-label">20</span>% of profit</div>
+      </div>
+      <div class="stat-card" style="border-color:rgba(52,152,219,0.25)">
+        <div class="stat-card-top">
+          <div class="stat-card-label">Items Sold</div>
+          <div class="stat-card-icon icon-blue"><i class="fas fa-shopping-bag"></i></div>
+        </div>
+        <div class="stat-card-num" id="sa-global-sold" style="color:#3498db">0</div>
+        <div class="stat-card-trend">Across all sponsors</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-Sponsor Cards -->
+  <div id="sa-sponsors-grid" class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+    <div class="admin-loading-row" style="padding:40px;text-align:center;color:#888">Loading sponsor analytics…</div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     NOTIFICATION SEND CONFIRMATION MODAL
+════════════════════════════════════════════════════════ -->
+<div id="notif-confirm-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-paper-plane" style="color:var(--gold);margin-right:8px"></i>Confirm Send</div>
+      <button class="modal-close-btn" data-close-modal="notif-confirm-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="tg-info">
+        <i class="fas fa-info-circle"></i>
+        <span id="notif-confirm-text"></span>
+      </div>
+      <div class="notif-confirm-summary" id="notif-confirm-summary"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="notif-confirm-modal">Cancel</button>
+      <button class="btn btn-gold" id="notif-confirm-send-btn" onclick="confirmSendNotification()">
+        <i class="fas fa-paper-plane"></i> Send
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TOAST CONTAINER
+════════════════════════════════════════════════════════ -->
+<div id="admin-toast"></div>
+
+<!-- ════════════════════════════════════════════════════════
+     SCRIPTS
+═════════════════════════════════════════════════════════ -->
+<script src="admin.js"></script>
+
+</body>
+</html>

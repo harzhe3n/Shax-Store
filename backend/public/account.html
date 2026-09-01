@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Shax Store — My Account">
+  <title>My Account — Shax Store</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Shared stylesheet (same folder as index.html) -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Theme controller: sets data-theme before first paint (no flash) -->
+  <script src="theme.js"></script>
+
+  <style>
+    /* ─── Account-page extra styles ───────────────── */
+    .account-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 110px 24px 80px;
+      min-height: 60vh;
+    }
+    .account-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+    /* Profile card */
+    .profile-card {
+      background: var(--black-card);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      text-align: center;
+      position: sticky;
+      top: 90px;
+    }
+    .profile-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 900;
+      color: var(--black);
+      margin: 0 auto 16px;
+      box-shadow: 0 0 0 4px rgba(201,168,76,0.2);
+    }
+    .profile-name {
+      font-family: var(--font-display);
+      font-size: 1.4rem; font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+    .profile-email { color: var(--white-dim); font-size:.85rem; margin-bottom: 20px; word-break: break-word; }
+    .profile-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 50px;
+      padding: 4px 14px;
+      font-size: .75rem; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 24px;
+    }
+    .profile-stats {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 24px;
+    }
+    .profile-stat {
+      background: var(--gray);
+      border-radius: var(--radius);
+      padding: 12px 8px;
+    }
+    .profile-stat-num {
+      font-family: var(--font-display);
+      font-size: 1.6rem; font-weight: 900;
+      color: var(--gold);
+    }
+    .profile-stat-lbl { font-size: .72rem; color: var(--white-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Orders panel */
+    .orders-panel {
+      background: var(--black-card);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .orders-panel-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+    }
+    .orders-panel-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .order-card {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background var(--transition);
+    }
+    .order-card:last-child { border-bottom: none; }
+    .order-card:hover { background: rgba(201,168,76,0.02); }
+    .order-card-top {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      margin-bottom: 12px;
+    }
+    .order-id {
+      font-family: var(--font-display);
+      font-size: .95rem; font-weight: 700;
+      color: var(--gold); letter-spacing: 1px;
+    }
+    .order-date { color: var(--white-dim); font-size: .8rem; }
+    .order-items-list {
+      display: flex; flex-direction: column; gap: 6px;
+      margin-bottom: 12px;
+    }
+    .order-item-row {
+      display: flex; justify-content: space-between;
+      align-items: center; gap: 10px;
+      font-size: .88rem; color: var(--white-dim);
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 10px;
+      font-family: var(--font-display); font-weight: 700;
+    }
+    .order-status-badge {
+      display: inline-block;
+      padding: 3px 12px; border-radius: 50px;
+      font-size: .72rem; font-weight: 600; letter-spacing:.5px; text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .status-pending    { background: rgba(243,156,18,.15); color: #f39c12; }
+    .status-processing { background: rgba(52,152,219,.15); color: #3498db; }
+    .status-shipped    { background: rgba(52,152,219,.15); color: #3498db; }
+    .status-delivered  { background: rgba(39,174,96,.15);  color: #27ae60; }
+    .status-cancelled  { background: rgba(192,57,43,.15);  color: #C0392B; }
+
+    .cancel-order-btn {
+      background: transparent;
+      border: 1px solid rgba(192,57,43,.5);
+      color: #e74c3c;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+    .cancel-order-btn:hover { background: rgba(192,57,43,.12); border-color: #e74c3c; }
+
+    .track-order-btn {
+      background: transparent;
+      border: 1px solid rgba(201,168,76,.5);
+      color: var(--gold);
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease;
+      font-family: inherit;
+    }
+    .track-order-btn:hover { background: rgba(201,168,76,.12); }
+
+    /* Order tracking modal + timeline */
+    .tracking-overlay {
+      position: fixed; inset: 0; z-index: 900;
+      background: rgba(0,0,0,.72);
+      display: none; align-items: flex-start; justify-content: center;
+      overflow-y: auto; padding: 84px 16px 32px;
+    }
+    .tracking-overlay.open { display: flex; }
+    .tracking-modal {
+      background: var(--black-card);
+      border: 1px solid rgba(201,168,76,.25);
+      border-radius: var(--radius-lg);
+      width: 100%; max-width: 560px;
+      padding: 26px 24px 24px;
+      position: relative;
+      box-shadow: 0 24px 60px rgba(0,0,0,.5);
+    }
+    .tracking-close {
+      position: absolute; inset-inline-end: 14px; top: 14px;
+      background: none; border: none;
+      color: var(--white-dim); font-size: 1.15rem; cursor: pointer;
+      padding: 4px 8px;
+    }
+    .tracking-close:hover { color: var(--gold); }
+    .track-head {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+    }
+    .track-id {
+      font-family: var(--font-display);
+      font-size: 1.05rem; font-weight: 800;
+      color: var(--gold); letter-spacing: 1px;
+    }
+    .track-date { color: var(--white-dim); font-size: .8rem; }
+    .track-section-title {
+      font-size: .75rem; text-transform: uppercase; letter-spacing: 1px;
+      color: #888; margin: 18px 0 8px;
+    }
+    .track-items { margin-bottom: 4px; }
+    .track-address {
+      margin-top: 14px; font-size: .84rem; color: var(--white-dim);
+      background: var(--gray); border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .track-total {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 20px; padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-family: var(--font-display); font-weight: 700; font-size: .95rem;
+    }
+    .tl { margin-top: 4px; }
+    .tl-step { display: flex; gap: 14px; align-items: stretch; }
+    .tl-rail {
+      position: relative; width: 20px; flex: none;
+      display: flex; justify-content: center;
+    }
+    .tl-rail::after {
+      content: ''; position: absolute; top: 20px; bottom: 0; width: 2px;
+      background: rgba(201,168,76,.20);
+    }
+    .tl-step:last-child .tl-rail::after { display: none; }
+    .tl-dot {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--gray); color: #999;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 7px; z-index: 1; margin-top: 2px; flex: none;
+    }
+    .tl-step.current .tl-dot { background: var(--gold); color: #111; }
+    .tl-content { flex: 1; padding-bottom: 22px; }
+    .tl-step:last-child .tl-content { padding-bottom: 0; }
+    .tl-status { font-weight: 700; font-size: .92rem; }
+    .tl-current-badge {
+      display: inline-block; margin-inline-start: 8px; padding: 2px 10px;
+      background: rgba(201,168,76,.15); color: var(--gold);
+      border-radius: 50px; font-size: .68rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; vertical-align: middle;
+    }
+    .tl-meta { font-size: .78rem; color: var(--white-dim); margin-top: 3px; }
+    .tl-note { font-size: .8rem; color: #C9A84C; opacity: .9; margin-top: 4px; }
+    .tl-empty { color: var(--white-dim); font-size: .88rem; padding: 8px 0; }
+
+    .empty-orders, .orders-loading {
+      text-align: center; padding: 60px 24px; color: var(--white-dim);
+    }
+    .empty-orders i, .orders-loading i { font-size: 3rem; color: var(--gray-light); display: block; margin-bottom: 16px; }
+    .empty-orders p { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 20px; }
+
+    @media (max-width: 768px) {
+      .account-grid { grid-template-columns: 1fr; }
+      .profile-card { position: static; }
+      .account-wrap { padding: 90px 16px 60px; }
+      /* Notch devices: keep the account header clear of the status bar */
+      @supports (padding-top: env(safe-area-inset-top)) {
+        .account-wrap { padding-top: calc(90px + env(safe-area-inset-top)); }
+      }
+    }
+    @media (max-width: 480px) {
+      .profile-stats { gap: 8px; }
+      .profile-card { padding: 24px 18px; }
+      .orders-panel-header, .order-card { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     NAVBAR (matches main store — shared Main.js wiring)
+══════════════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-inner">
+
+    <!-- Logo -->
+    <a class="nav-logo" href="index.html">
+      <!-- PLACE YOUR LOGO IMAGE HERE: public/assets/logo.png -->
+      <img src="assets/logo.png" alt="Shax Store">
+      <span class="nav-logo-text">SHAX<span style="color:#fff;font-weight:400"> STORE</span></span>
+    </a>
+
+    <!-- Desktop Nav Links -->
+    <div class="nav-links">
+      <a class="nav-link" href="index.html"          data-i18n="nav_home">Home</a>
+      <a class="nav-link" href="index.html#products"  data-i18n="nav_products">Products</a>
+      <!-- ABOUT — paste your external About page link inside href="" below -->
+      <a class="nav-link" href="PASTE_ABOUT_PAGE_LINK_HERE" target="_blank" rel="noopener" data-i18n="nav_about">About</a>
+      <a class="nav-link" href="index.html#footer"    data-i18n="nav_contact">Contact</a>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="nav-right">
+
+      <!-- Language Selector (custom dropdown — native <select> can't show flag images) -->
+      <div class="lang-dropdown" id="lang-dropdown-desktop">
+        <button type="button" class="lang-btn" onclick="toggleLangMenu('lang-dropdown-desktop')"
+                aria-haspopup="true" aria-expanded="false" title="Language">
+          <!-- PLACE FLAG IMAGES HERE: public/assets/flags/en.png, ku.svg, ar.svg -->
+          <img class="flag-icon lang-btn-flag" src="assets/flags/en.png" alt="">
+          <span class="lang-btn-code">EN</span>
+          <i class="fas fa-chevron-down" style="font-size:0.65rem;opacity:.6"></i>
+        </button>
+        <div class="lang-menu">
+          <div class="lang-option" data-lang="en" onclick="selectLanguage('en')">
+            <img class="flag-icon" src="assets/flags/en.png" alt="English"><span>English</span>
+          </div>
+          <div class="lang-option" data-lang="ku" onclick="selectLanguage('ku')">
+            <img class="flag-icon" src="assets/flags/ku.png" alt="Kurdish"><span>کوردی</span>
+          </div>
+          <div class="lang-option" data-lang="ar" onclick="selectLanguage('ar')">
+            <img class="flag-icon" src="assets/flags/ar.png" alt="Arabic"><span>العربية</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Menu -->
+      <div id="nav-user-menu" class="user-menu-wrap" style="display:none">
+        <button class="user-btn" onclick="toggleUserDropdown()">
+          <i class="fas fa-user-circle"></i>
+          <span id="user-name"></span>
+          <i class="fas fa-chevron-down" style="font-size:0.65rem;opacity:.6"></i>
+        </button>
+        <div id="user-dropdown">
+          <div class="dropdown-item" style="cursor:default">
+            <i class="fas fa-box-open"></i>
+            <span data-i18n="my_orders">My Orders</span>
+          </div>
+          <a class="dropdown-item" id="admin-panel-link" href="admin/index.html" style="display:none">
+            <i class="fas fa-cog"></i>
+            Admin Panel
+          </a>
+          <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="logout(); window.location.href='index.html'">
+              <i class="fas fa-sign-out-alt"></i>
+              <span data-i18n="logout">Logout</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button class="theme-toggle" type="button" onclick="toggleTheme()"
+                title="Toggle light/dark theme" aria-label="Toggle light/dark theme" aria-pressed="false">
+          <i class="fas fa-moon"></i>
+        </button>
+
+      </div>
+    </div>
+  </nav>
+
+<!-- ═══════════════════════════════════════════
+     ACCOUNT CONTENT
+══════════════════════════════════════════════ -->
+<div class="account-wrap">
+  <div class="account-grid">
+
+    <!-- Profile Sidebar -->
+    <div class="profile-card">
+      <div class="profile-avatar" id="acc-avatar">?</div>
+      <div class="profile-name" id="acc-name">—</div>
+      <div class="profile-email" id="acc-email">—</div>
+      <div class="profile-badge">
+        <i class="fas fa-user-check"></i>
+        <span id="acc-role-label" data-i18n="member_label">Member</span>
+      </div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-num" id="acc-order-count">0</div>
+          <div class="profile-stat-lbl" data-i18n="orders_label">Orders</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-num" id="acc-total-spent">0 IQD</div>
+          <div class="profile-stat-lbl" data-i18n="total_spent_label">Total Spent</div>
+        </div>
+      </div>
+      <button class="btn btn-outline" style="width:100%;margin-bottom:10px"
+              onclick="window.location.href='index.html'">
+        <i class="fas fa-store"></i>
+        <span data-i18n="back_to_store">Back to Store</span>
+      </button>
+      <button class="btn btn-outline" style="width:100%;border-color:#C0392B;color:#C0392B"
+              onclick="logout(); window.location.href='index.html'">
+        <i class="fas fa-sign-out-alt"></i>
+        <span data-i18n="logout">Logout</span>
+      </button>
+    </div>
+
+    <!-- Orders Panel -->
+    <div class="orders-panel">
+      <div class="orders-panel-header">
+        <div class="orders-panel-title" data-i18n="order_history">Order History</div>
+        <a class="btn btn-gold btn-sm" href="index.html#products">
+          <i class="fas fa-plus"></i>
+          <span data-i18n="shop_now">Shop Now</span>
+        </a>
+      </div>
+      <div id="orders-container">
+        <div class="orders-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading…</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TOAST CONTAINER
+══════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+     ORDER TRACKING MODAL (opened by #order-<id> hash or Track Order button)
+═════════════════════════════════════════════ -->
+<div class="tracking-overlay" id="tracking-overlay" aria-hidden="true">
+  <div class="tracking-modal" role="dialog" aria-modal="true" aria-label="Order Tracking">
+    <button type="button" class="tracking-close" onclick="closeTrackingModal()" aria-label="Close"><i class="fas fa-times"></i></button>
+    <div id="tracking-body"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════ -->
+<!-- Shared Main.js: STATE, api(), t(), escapeHtml(), verifySession(), logout(),
+     toggleUserDropdown(), toggleLangMenu(), selectLanguage(), updateAuthUI(), showToast() -->
+<script src="Main.js"></script>
+
+<!-- Account-page logic (reuses Main.js globals; no cart/search/i18n duplication) -->
+<script>
+(function () {
+  'use strict';
+
+  /* Fast-path redirect before any flash of content if there's clearly no session */
+  if (!localStorage.getItem('shax_token')) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  const STATUS_CLASS = {
+    pending: 'status-pending', processing: 'status-processing',
+    shipped: 'status-shipped', delivered: 'status-delivered', cancelled: 'status-cancelled'
+  };
+  const STATUS_KEY = {
+    pending: 'status_pending', processing: 'status_processing',
+    shipped: 'status_shipped', delivered: 'status_delivered', cancelled: 'status_cancelled'
+  };
+  const STATUS_ICON = {
+    pending: 'fa-clock', processing: 'fa-cogs',
+    shipped: 'fa-truck-fast', delivered: 'fa-check-circle', cancelled: 'fa-times-circle'
+  };
+  const TRACK_STATE = { open: false, orderId: null, detail: null, timer: null, loading: false };
+
+  function populateProfile(user) {
+    const initials = (user.name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    document.getElementById('acc-avatar').textContent = initials || 'U';
+    document.getElementById('acc-name').textContent = user.name || '—';
+    document.getElementById('acc-email').textContent = user.email || '—';
+    document.getElementById('acc-role-label').textContent = user.isAdmin ? t('admin_label') : t('member_label');
+    const nameEl = document.getElementById('user-name');
+    if (nameEl) nameEl.textContent = (user.name || 'Account').split(' ')[0];
+    document.title = t('order_history') + ' — Shax Store';
+  }
+
+  function renderOrders(orders) {
+    const container = document.getElementById('orders-container');
+    if (!container) return;
+
+    if (!orders.length) {
+      container.innerHTML = `
+        <div class="empty-orders">
+          <i class="fas fa-box-open"></i>
+          <p>${escapeHtml(t('no_orders'))}</p>
+          <p style="font-size:.82rem;color:#555;margin-bottom:24px">${escapeHtml(t('no_orders_sub'))}</p>
+          <a class="btn btn-gold btn-sm" href="index.html#products">
+            <i class="fas fa-store"></i> ${escapeHtml(t('shop_now'))}
+          </a>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = orders.map(order => {
+      const statusClass = STATUS_CLASS[order.status] || 'status-pending';
+      const statusLabel = t(STATUS_KEY[order.status] || 'status_pending');
+      const date = (order.createdAt || order.date) ? new Date(order.createdAt || order.date).toLocaleDateString() : '—';
+
+      const itemsHtml = (order.items || []).map(item => `
+        <div class="order-item-row">
+          <span>${escapeHtml(item.productName || item.product_name || item.name || '—')}
+            <span style="color:#555;font-size:.78rem">(${escapeHtml(t('order_size_label'))}: ${escapeHtml(item.size || '—')}${item.color ? ` · ${escapeHtml(item.color)}` : ''})</span>
+          </span>
+          <span>
+            <span style="color:#555;margin-right:8px">×${Number(item.quantity || item.qty || 0)}</span>
+            <span style="color:#C9A84C;font-weight:700">${formatPrice(Number(item.unitPrice ?? item.unit_price ?? item.price ?? 0) * Number(item.quantity || item.qty || 0))}</span>
+          </span>
+        </div>
+      `).join('');
+
+      const addressLine = (order.address || order.city)
+        ? `<div style="margin-top:10px;font-size:.8rem;color:#555">
+             <i class="fas fa-map-marker-alt" style="margin-right:5px;color:#C9A84C"></i>
+             ${escapeHtml(order.city ? order.city + ', ' : '')}${escapeHtml(order.address || '')}
+           </div>`
+        : '';
+
+      // User can cancel any order that hasn't been delivered (or already cancelled).
+      const canCancel = order.status !== 'delivered' && order.status !== 'cancelled';
+      const trackBtn = `<button type="button" class="track-order-btn" onclick="openTrackingModal('${escapeHtml(order.id)}')">
+               <i class="fas fa-truck-fast" style="margin-inline-end:6px"></i>${escapeHtml(t('track_order'))}
+             </button>`;
+      const cancelBtn = canCancel
+        ? `<button class="cancel-order-btn" onclick="cancelMyOrder('${escapeHtml(order.id)}')">
+             <i class="fas fa-times-circle" style="margin-inline-end:6px"></i>${escapeHtml(t('cancel_order'))}
+           </button>`
+        : '';
+      const actionsHtml = `<div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">${trackBtn}${cancelBtn}</div>`;
+
+      return `
+        <div class="order-card">
+          <div class="order-card-top">
+            <div>
+              <div class="order-id">${escapeHtml(order.id || '—')}</div>
+              <div class="order-date"><i class="fas fa-calendar-alt" style="margin-right:5px;color:#555"></i>${date}</div>
+            </div>
+            <span class="order-status-badge ${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="order-items-list">${itemsHtml}</div>
+          <div class="order-total-row">
+            <span style="font-size:.85rem;color:#888;text-transform:uppercase;letter-spacing:1px">${escapeHtml(t('order_total_label'))}</span>
+            <span style="color:#C9A84C;font-size:1.15rem">${formatPrice(Number(order.total || 0))}</span>
+          </div>
+          ${addressLine}
+          ${actionsHtml}
+        </div>`;
+    }).join('');
+  }
+
+  async function cancelMyOrder(id) {
+    if (!confirm(t('cancel_order_confirm'))) return;
+    try {
+      await api('/orders/my/' + encodeURIComponent(id), { method: 'DELETE' });
+      showToast(t('cancel_order_done'), 'success');
+      if (TRACK_STATE.open && TRACK_STATE.orderId === id) closeTrackingModal();
+      loadOrders();
+    } catch (err) {
+      showToast(err.message || 'Failed to cancel order.', 'error');
+    }
+  }
+  window.cancelMyOrder = cancelMyOrder;
+
+  /* ── Order tracking (modal + timeline + #order-<id> deep-link) ── */
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function hashOrderId() {
+    const m = location.hash.match(/^#order-(.+)$/i);
+    if (!m) return null;
+    try { return decodeURIComponent(m[1]); } catch { return m[1]; }
+  }
+
+  function setLocationHash(orderId) {
+    try {
+      history.replaceState(null, '', location.pathname + location.search + '#order-' + encodeURIComponent(orderId));
+    } catch { location.hash = 'order-' + encodeURIComponent(orderId); }
+  }
+
+  function clearLocationHash() {
+    if (!hashOrderId()) return;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch { /* ignore */ }
+  }
+
+  function renderTracking() {
+    const body = document.getElementById('tracking-body');
+    if (!body || !TRACK_STATE.detail) return;
+    const o = TRACK_STATE.detail;
+    const timeline = o.timeline || [];
+    const statusClass = STATUS_CLASS[o.status] || 'status-pending';
+    const statusLabel = t(STATUS_KEY[o.status] || 'status_pending');
+
+    const itemsHtml = (o.items || []).map(item => `
+      <div class="order-item-row">
+        <span>${escapeHtml(item.name || '—')}
+          <span style="color:#555;font-size:.78rem">(${escapeHtml(t('order_size_label'))}: ${escapeHtml(item.size || '—')})</span>
+        </span>
+        <span>
+          <span style="color:#555;margin-inline-end:8px">×${Number(item.qty || 0)}</span>
+          <span style="color:#C9A84C;font-weight:700">${formatPrice(Number(item.price || 0) * Number(item.qty || 0))}</span>
+        </span>
+      </div>`).join('');
+
+    const timelineHtml = timeline.length
+      ? `<div class="tl" role="list">
+          ${timeline.map((e, i) => {
+            const isCurrent = i === timeline.length - 1;
+            const icon = STATUS_ICON[e.status] || 'fa-circle';
+            const note = e.note ? `<div class="tl-note"><i class="fas fa-info-circle" style="margin-inline-end:5px"></i>${escapeHtml(e.note)}</div>` : '';
+            return `<div class="tl-step${isCurrent ? ' current' : ''}" role="listitem">
+              <div class="tl-rail"><span class="tl-dot"><i class="fas ${icon}"></i></span></div>
+              <div class="tl-content">
+                <div class="tl-status">${escapeHtml(t(STATUS_KEY[e.status] || 'status_pending'))}${isCurrent ? ` <span class="tl-current-badge">${escapeHtml(t('track_current'))}</span>` : ''}</div>
+                <div class="tl-meta">${fmtDate(e.at)}${e.by ? ' · ' + escapeHtml(e.by) : ''}</div>
+                ${note}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`
+      : `<div class="tl-empty">${escapeHtml(t('track_no_timeline'))}</div>`;
+
+    const addressLine = (o.address || o.city)
+      ? `<div class="track-address">
+           <i class="fas fa-map-marker-alt" style="margin-inline-end:5px;color:#C9A84C"></i>
+           ${escapeHtml(o.city ? o.city + ', ' : '')}${escapeHtml(o.address || '')}
+         </div>`
+      : '';
+
+    body.innerHTML = `
+      <div class="track-head">
+        <div>
+          <div class="track-id">${escapeHtml(o.id || '—')}</div>
+          <div class="track-date"><i class="fas fa-calendar-alt" style="margin-inline-end:5px;color:#555"></i>${fmtDate(o.date)}</div>
+        </div>
+        <span class="order-status-badge ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="track-section-title">${escapeHtml(t('track_items'))}</div>
+      <div class="track-items">${itemsHtml || `<div class="tl-empty">—</div>`}</div>
+      ${addressLine}
+      <div class="track-section-title">${escapeHtml(t('track_title'))}</div>
+      ${timelineHtml}
+      <div class="track-total">
+        <span>${escapeHtml(t('track_total'))}</span>
+        <span style="color:#C9A84C;font-size:1.15rem">${formatPrice(Number(o.total || 0))}</span>
+      </div>`;
+  }
+
+  async function loadTracking(orderId, silent) {
+    if (TRACK_STATE.loading) return;
+    TRACK_STATE.loading = true;
+    const body = document.getElementById('tracking-body');
+    if (!silent && body) {
+      body.innerHTML = `<div class="orders-loading"><i class="fas fa-spinner fa-spin"></i><p>…</p></div>`;
+    }
+    try {
+      TRACK_STATE.detail = await api('/orders/my/' + encodeURIComponent(orderId));
+      renderTracking();
+    } catch {
+      TRACK_STATE.detail = null;
+      if (body) {
+        body.innerHTML = `
+          <div class="empty-orders">
+            <i class="fas fa-triangle-exclamation"></i>
+            <p>${escapeHtml(t('track_failed'))}</p>
+            <button type="button" class="btn btn-outline btn-sm" onclick="openTrackingModal('${escapeHtml(orderId)}')">${escapeHtml(t('notif_retry'))}</button>
+            <button type="button" class="btn btn-outline btn-sm" style="margin-inline-start:8px" onclick="closeTrackingModal()">${escapeHtml(t('track_close'))}</button>
+          </div>`;
+      }
+    } finally {
+      TRACK_STATE.loading = false;
+    }
+  }
+
+  function startPolling() {
+    if (TRACK_STATE.timer) return;
+    TRACK_STATE.timer = setInterval(() => {
+      if (!TRACK_STATE.open || !TRACK_STATE.orderId) return;
+      loadTracking(TRACK_STATE.orderId, true);
+    }, 30000);
+  }
+
+  function stopPolling() {
+    if (TRACK_STATE.timer) {
+      clearInterval(TRACK_STATE.timer);
+      TRACK_STATE.timer = null;
+    }
+  }
+
+  function openTrackingModal(orderId) {
+    if (!orderId) return;
+    if (TRACK_STATE.open && TRACK_STATE.orderId === orderId && TRACK_STATE.detail) return;
+    TRACK_STATE.open = true;
+    TRACK_STATE.orderId = orderId;
+    TRACK_STATE.detail = null;
+    const overlay = document.getElementById('tracking-overlay');
+    if (overlay) {
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+    if (location.hash !== '#order-' + orderId) setLocationHash(orderId);
+    startPolling();
+    loadTracking(orderId);
+  }
+  window.openTrackingModal = openTrackingModal;
+
+  function closeTrackingModal() {
+    TRACK_STATE.open = false;
+    TRACK_STATE.orderId = null;
+    TRACK_STATE.detail = null;
+    stopPolling();
+    const overlay = document.getElementById('tracking-overlay');
+    if (overlay) {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    clearLocationHash();
+  }
+  window.closeTrackingModal = closeTrackingModal;
+
+  function openOrderFromHash() {
+    if (!STATE.user) return;
+    const id = hashOrderId();
+    if (id) openTrackingModal(id);
+  }
+
+  function populateStats(orders) {
+    // Cancelled orders don't count toward money spent — cancelling an order
+    // returns the total to exactly what it was before that order was placed.
+    const spent = orders
+      .filter(o => (o.status || '').toLowerCase() !== 'cancelled')
+      .reduce((sum, o) => sum + Number(o.total || 0), 0);
+    document.getElementById('acc-order-count').textContent = orders.length;
+    document.getElementById('acc-total-spent').textContent = formatPrice(spent);
+  }
+
+  let lastOrders = [];
+
+  async function loadOrders() {
+    try {
+      const orders = await api('/orders/my');
+      lastOrders = (orders || []).slice().sort((a, b) =>
+        new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+      populateStats(lastOrders);
+      renderOrders(lastOrders);
+    } catch (err) {
+      const container = document.getElementById('orders-container');
+      if (container) {
+        container.innerHTML = `
+          <div class="empty-orders">
+            <i class="fas fa-triangle-exclamation"></i>
+            <p>Couldn't load your orders.</p>
+          </div>`;
+      }
+      showToast(err.message || 'Failed to load orders', 'error');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async function () {
+    // Re-verify the session independently of Main.js's own DOMContentLoaded handler
+    // (listener execution order between the two scripts isn't guaranteed).
+    await verifySession();
+
+    if (!STATE.user) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    populateProfile(STATE.user);
+    updateAuthUI();
+    await loadOrders();
+    openOrderFromHash();
+
+    // Keep the tracking modal in sync: navigation deep-links, refocus and keyboard.
+    window.addEventListener('hashchange', openOrderFromHash);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && TRACK_STATE.open && TRACK_STATE.orderId) {
+        loadTracking(TRACK_STATE.orderId, true);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && TRACK_STATE.open) closeTrackingModal();
+    });
+    const trackingOverlay = document.getElementById('tracking-overlay');
+    if (trackingOverlay) {
+      trackingOverlay.addEventListener('click', (e) => {
+        if (e.target === trackingOverlay) closeTrackingModal();
+      });
+    }
+
+    // Re-render with localized labels whenever the language changes
+    const origApplyLanguage = window.applyLanguage;
+    if (typeof origApplyLanguage === 'function') {
+      window.applyLanguage = function (lang) {
+        origApplyLanguage(lang);
+        if (STATE.user) {
+          populateProfile(STATE.user);
+          renderOrders(lastOrders);
+          if (TRACK_STATE.open && TRACK_STATE.detail) renderTracking();
+        }
+      };
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

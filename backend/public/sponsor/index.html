@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Sponsor Panel — Shax Store</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../admin/admin.css">
+  <!-- Theme controller: sets data-theme before first paint (no flash) -->
+  <script src="../theme.js"></script>
+</head>
+<body>
+
+<!-- ════════ LOGIN OVERLAY ════════ -->
+<div id="sp-login-overlay" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:10px">
+        <i class="fas fa-store" style="color:#C9A84C;font-size:1.2rem"></i> Sponsor Login
+      </div>
+    </div>
+    <div class="modal-body">
+      <form id="spl-form" novalidate style="display:flex;flex-direction:column;gap:16px">
+        <div class="form-group">
+          <label class="form-label" for="spl-email"><i class="fas fa-envelope" style="margin-right:6px;color:#C9A84C"></i>Email</label>
+          <input class="form-input" id="spl-email" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="spl-pass"><i class="fas fa-lock" style="margin-right:6px;color:#C9A84C"></i>Password</label>
+          <input class="form-input" id="spl-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="spl-error" class="form-error" style="color:#C0392B;font-size:.82rem"></div>
+        <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+        <p style="font-size:.75rem;color:#555;text-align:center">Sponsor accounts are created by the store admin.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="sidebar-backdrop"></div>
+
+<!-- ════════ SIDEBAR ════════ -->
+<aside id="admin-sidebar">
+  <div class="sidebar-logo">
+    <img src="../assets/logo.png" alt="Shax Store">
+    <div>
+      <div class="sidebar-logo-text">SHAX STORE</div>
+      <div class="sidebar-subtitle">Sponsor Panel</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">My Store</div>
+    <div class="sidebar-link active" data-page="store"><i class="fas fa-shop"></i> My Store</div>
+    <div class="sidebar-link" data-page="products"><i class="fas fa-box"></i> My Products</div>
+    <div class="sidebar-section-label" style="margin-top:12px">Business</div>
+    <div class="sidebar-link" data-page="orders"><i class="fas fa-shopping-cart"></i> My Orders</div>
+    <div class="sidebar-link" data-page="stats"><i class="fas fa-chart-line"></i> My Stats</div>
+    <div class="sidebar-link" data-page="telegram"><i class="fab fa-telegram"></i> Telegram</div>
+    <div class="sidebar-link" onclick="sponsorLogout()" style="color:#C0392B;margin-top:12px">
+      <i class="fas fa-sign-out-alt" style="color:#C0392B"></i> Logout
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="admin-user">
+      <div class="admin-avatar" id="sp-avatar">S</div>
+      <div class="admin-info">
+        <div class="admin-name" id="sp-name-label">Sponsor</div>
+        <div class="admin-role">Sponsor</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════ MAIN ════════ -->
+<main id="admin-main">
+  <div id="admin-topbar">
+    <div style="display:flex;align-items:center;gap:14px">
+      <button id="mobile-sidebar-toggle" class="btn btn-outline btn-sm" style="display:none;padding:8px 10px"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title"><span id="page-title">My Store</span></div>
+    </div>
+    <div class="topbar-right">
+      <button class="theme-toggle" type="button" onclick="toggleTheme()"
+              title="Toggle light/dark theme" aria-label="Toggle light/dark theme" aria-pressed="false">
+        <i class="fas fa-moon"></i>
+      </button>
+      <a class="back-to-store" href="../index.html"><i class="fas fa-store"></i> View Shop</a>
+    </div>
+  </div>
+
+  <!-- ── PAGE: MY STORE ── -->
+  <div id="page-store" class="admin-page active">
+    <div class="page-toolbar"><div class="page-toolbar-title">My <span style="color:#C9A84C">Store</span></div></div>
+    <div class="tg-info" style="max-width:680px">
+      <i class="fas fa-info-circle"></i>
+      <span id="store-help">Set up your store. This creates your category in the shop where all your products appear. You can have <strong>one</strong> store.</span>
+    </div>
+    <div class="admin-card" style="max-width:680px;margin-top:18px">
+      <div class="admin-card-body">
+        <div class="form-section-title">Store Image</div>
+        <label class="img-upload-area" for="sp-cat-image-file">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p><span>Click to upload</span> or drag an image here</p>
+          <p style="font-size:.72rem;margin-top:4px">JPG, PNG, WEBP or GIF — max 5MB</p>
+          <input type="file" id="sp-cat-image-file" accept="image/jpeg,image/png,image/webp,image/gif">
+        </label>
+        <img id="sp-cat-img-preview" alt="Preview" style="max-width:110px;max-height:110px;object-fit:cover;margin:14px auto 0;border-radius:8px;display:none;border:1px solid rgba(201,168,76,0.2)">
+        <div class="upload-status" id="sp-cat-upload-status"></div>
+        <input type="hidden" id="sp-cat-image-url">
+        <div class="form-grid" style="margin-top:14px">
+          <div class="form-group">
+            <label class="form-label">Store Name (EN) <span style="color:#C0392B">*</span></label>
+            <input class="form-input" id="sp-cat-name" type="text" placeholder="e.g. Ali's Fitness">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Store Name (Kurdish)</label>
+            <input class="form-input" id="sp-cat-name-ku" type="text" dir="rtl" placeholder="ناوی فرۆشگا">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Store Name (Arabic)</label>
+            <input class="form-input" id="sp-cat-name-ar" type="text" dir="rtl" placeholder="اسم المتجر">
+          </div>
+        </div>
+        <button class="btn btn-gold" id="sp-cat-save-btn" onclick="saveStore()" style="margin-top:8px">
+          <i class="fas fa-save"></i> <span id="sp-cat-save-label">Create Store</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: MY PRODUCTS ── -->
+  <div id="page-products" class="admin-page">
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">My <span style="color:#C9A84C">Products</span></div>
+      <div class="toolbar-actions">
+        <button class="btn btn-gold" id="sp-add-product-btn" onclick="openAddProduct()"><i class="fas fa-plus"></i> Add Product</button>
+      </div>
+    </div>
+    <div id="sp-no-store-warning" class="tg-info" style="display:none;max-width:680px">
+      <i class="fas fa-triangle-exclamation"></i>
+      <span>Create your store first (in the <strong>My Store</strong> tab) before adding products.</span>
+    </div>
+    <div class="admin-card">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th style="width:50px">ID</th><th style="width:60px">Image</th><th>Product</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+          <tbody id="sp-products-tbody"><tr class="admin-loading-row"><td colspan="6">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: MY ORDERS ── -->
+  <div id="page-orders" class="admin-page">
+    <div class="page-toolbar"><div class="page-toolbar-title">My <span style="color:#C9A84C">Orders</span></div></div>
+    <div class="admin-card">
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>My Items</th>
+              <th>My Total</th>
+              <th>Order Total</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="sp-orders-tbody"><tr class="admin-loading-row"><td colspan="8">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: MY STATS ── -->
+  <div id="page-stats" class="admin-page">
+    <div class="page-toolbar"><div class="page-toolbar-title">My <span style="color:#C9A84C">Stats</span></div></div>
+    <div class="stats-grid" style="margin-bottom:24px" id="sp-stats-cards"></div>
+    <div class="admin-card">
+      <div class="admin-card-body">
+        <div class="form-section-title">Per-Product Breakdown</div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th style="width:50px">Image</th><th>Product</th><th>Sold</th><th>Revenue</th><th>Profit</th><th>Commission</th><th>Earnings</th></tr></thead>
+            <tbody id="sp-stats-products"><tr class="admin-loading-row"><td colspan="7">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAGE: TELEGRAM ── -->
+  <div id="page-telegram" class="admin-page">
+    <div class="page-toolbar"><div class="page-toolbar-title"><i class="fab fa-telegram" style="color:#0088cc;margin-right:8px"></i>Telegram <span style="color:#C9A84C">Notifications</span></div></div>
+    <div class="tg-info" style="max-width:680px">
+      <i class="fas fa-info-circle"></i>
+      <span>Get order notifications sent directly to your Telegram. You'll only receive alerts for orders containing <strong>your</strong> products. Ask the admin for the bot details or create your own via @BotFather, then enter your chat ID below.</span>
+    </div>
+    <div class="admin-card" style="max-width:680px;margin-top:18px">
+      <div class="admin-card-body">
+        <div class="form-group">
+          <label class="form-label">Your Telegram Chat ID <span style="color:#C0392B">*</span></label>
+          <input class="form-input" id="sp-tg-chatid" type="text" placeholder="e.g. 123456789 or -100xxxxxxxxxx">
+          <div style="font-size:.75rem;color:#666;margin-top:6px">Find your chat ID by messaging @userinfobot or @getmyid_bot on Telegram.</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="saveSponsorTelegram()"><i class="fas fa-save"></i> Save Chat ID</button>
+          <button class="btn btn-outline" onclick="testSponsorTelegram()"><i class="fas fa-paper-plane"></i> Send Test</button>
+        </div>
+        <div id="sp-tg-status" style="margin-top:12px;font-size:.82rem;color:#888"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ════════ ORDER DETAIL MODAL ════════ -->
+<div id="sp-order-detail-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title" id="sp-od-title">Order Details</div>
+      <button class="modal-close-btn" data-close-modal="sp-order-detail-modal"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="sp-od-body"></div>
+  </div>
+</div>
+
+<!-- ════════ PRODUCT MODAL ════════ -->
+<div id="product-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="product-modal-title">Add Product</div>
+      <button class="modal-close-btn" data-close-modal="product-modal"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="p-id">
+      <input type="hidden" id="p-image-url">
+      <div class="form-section-title">Product Image</div>
+      <label class="img-upload-area" for="p-image-file">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p><span>Click to upload</span> or drag an image here</p>
+        <p style="font-size:.72rem;margin-top:4px">JPG, PNG, WEBP or GIF — max 5MB</p>
+        <input type="file" id="p-image-file" accept="image/jpeg,image/png,image/webp,image/gif">
+      </label>
+      <img id="img-preview" alt="Preview">
+      <div class="upload-status" id="p-upload-status"></div>
+      <div class="form-section-title" style="margin-top:6px">Basic Information</div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Name (EN) <span>*</span></label><input class="form-input" id="p-name" type="text" placeholder="Product name"></div>
+        <div class="form-group"><label class="form-label">Name (Kurdish)</label><input class="form-input" id="p-name-ku" type="text" dir="rtl" placeholder="ناوی بەرهەم"></div>
+        <div class="form-group"><label class="form-label">Name (Arabic)</label><input class="form-input" id="p-name-ar" type="text" dir="rtl" placeholder="اسم المنتج"></div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Filters <span style="color:#666;font-weight:400;font-size:.78rem">— tap to tag</span></label>
+          <div id="p-filters-box" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0"><span style="color:#666;font-size:.82rem">Loading…</span></div>
+        </div>
+        <div class="form-group"><label class="form-label">Price (IQD) <span>*</span></label><input class="form-input" id="p-price" type="number" placeholder="25000" min="0" step="250"></div>
+        <div class="form-group"><label class="form-label">Old Price (IQD)</label><input class="form-input" id="p-old-price" type="number" placeholder="35000" min="0" step="250"></div>
+        <div class="form-group"><label class="form-label">Shipping (IQD) <span style="color:#666;font-weight:400;font-size:.78rem">— 0 = Free</span></label><input class="form-input" id="p-shipping" type="number" placeholder="0" min="0" step="250" value="0"></div>
+        <div class="form-group"><label class="form-label">Badge</label><select class="form-select" id="p-badge"><option value="">No Badge</option><option value="new">New</option><option value="bestseller">Best Seller</option></select></div>
+        <div class="form-group"><label class="form-label">Stock Status</label><select class="form-select" id="p-stock-mode" onchange="spToggleStockQty()"><option value="hidden">In Stock (don't show amount)</option><option value="count">In Stock (show exact amount)</option><option value="out">Out of Stock</option></select></div>
+        <div class="form-group" id="p-stock-qty-group" style="display:none;grid-column:1/-1">
+          <label class="form-label">Stock per Size</label>
+          <div id="p-size-stock-grid" style="display:flex;flex-wrap:wrap;gap:12px"></div>
+        </div>
+        <input type="hidden" id="p-in-stock" value="1">
+        <input type="hidden" id="p-stock-qty" value="0">
+      </div>
+      <div class="form-section-title" style="margin-top:6px">Descriptions</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group"><label class="form-label">Description (EN)</label><textarea class="form-textarea" id="p-desc" placeholder="Product description"></textarea></div>
+        <div class="form-group"><label class="form-label">Description (Kurdish)</label><textarea class="form-textarea" id="p-desc-ku" dir="rtl" placeholder="وەسف"></textarea></div>
+        <div class="form-group"><label class="form-label">Description (Arabic)</label><textarea class="form-textarea" id="p-desc-ar" dir="rtl" placeholder="وصف"></textarea></div>
+      </div>
+      <div class="form-section-title" style="margin-top:6px">Available Sizes</div>
+      <div class="sizes-grid">
+        <div class="size-stock-item"><div class="size-stock-label">S</div><label style="display:flex;justify-content:center"><input type="checkbox" class="size-check" value="S" checked style="width:18px;height:18px;accent-color:#C9A84C"></label></div>
+        <div class="size-stock-item"><div class="size-stock-label">M</div><label style="display:flex;justify-content:center"><input type="checkbox" class="size-check" value="M" checked style="width:18px;height:18px;accent-color:#C9A84C"></label></div>
+        <div class="size-stock-item"><div class="size-stock-label">L</div><label style="display:flex;justify-content:center"><input type="checkbox" class="size-check" value="L" checked style="width:18px;height:18px;accent-color:#C9A84C"></label></div>
+        <div class="size-stock-item"><div class="size-stock-label">XL</div><label style="display:flex;justify-content:center"><input type="checkbox" class="size-check" value="XL" checked style="width:18px;height:18px;accent-color:#C9A84C"></label></div>
+        <div class="size-stock-item"><div class="size-stock-label">XXL</div><label style="display:flex;justify-content:center"><input type="checkbox" class="size-check" value="XXL" checked style="width:18px;height:18px;accent-color:#C9A84C"></label></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close-modal="product-modal">Cancel</button>
+      <button class="btn btn-gold" id="p-save-btn" onclick="saveProduct()"><i class="fas fa-save"></i> Save Product</button>
+    </div>
+  </div>
+</div>
+
+<div id="admin-toast"></div>
+<script src="sponsor.js"></script>
+</body>
+</html>

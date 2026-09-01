@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Shax Store — Premium Gym Wear in Kurdistan">
+  <title>Shax Store — Premium Gym Wear</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="assets/logo.png" type="image/png">
+
+  <!-- App Icons for PWA/Installed Apps -->
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/logo.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="assets/logo.png">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Main Stylesheet (same folder as this file) -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Theme controller: sets data-theme before first paint (no flash) -->
+  <script src="theme.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LOADER
+══════════════════════════════════════════════ -->
+<div id="loader">
+  <!-- PLACE YOUR LOGO IMAGE HERE: public/assets/logo.png (square, transparent background) -->
+  <img class="loader-logo" src="assets/logo.png" alt="Shax Store">
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-inner">
+
+    <!-- Logo -->
+    <a class="nav-logo" href="#hero">
+      <!-- PLACE YOUR LOGO IMAGE HERE: public/assets/logo.png -->
+      <img src="assets/logo.png" alt="Shax Store">
+      <span class="nav-logo-text">SHAX<span style="color:#fff;font-weight:400"> STORE</span></span>
+    </a>
+
+    <!-- Search -->
+    <div class="nav-search">
+      <input type="text" id="search-input"
+             data-i18n-placeholder="search_placeholder"
+             placeholder="Search products..." autocomplete="off">
+      <button type="button" onclick="renderProducts()">
+        <i class="fas fa-search"></i>
+      </button>
+      <div id="search-results"></div>
+    </div>
+
+    <!-- Desktop Nav Links -->
+    <div class="nav-links">
+      <a class="nav-link active" href="#hero"     data-i18n="nav_home">Home</a>
+      <a class="nav-link"        href="#products" data-i18n="nav_products">Products</a>
+      <a class="nav-link"        href="#footer"   data-i18n="nav_contact">Contact</a>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="nav-right">
+
+      <!-- Language Selector (custom dropdown — native <select> can't show flag images) -->
+      <div class="lang-dropdown" id="lang-dropdown-desktop">
+        <button type="button" class="lang-btn" onclick="toggleLangMenu('lang-dropdown-desktop')"
+                aria-haspopup="true" aria-expanded="false" title="Language">
+          <!-- PLACE FLAG IMAGES HERE: public/assets/flags/en.png, ku.svg, ar.svg -->
+          <img class="flag-icon lang-btn-flag" src="assets/flags/en.png" alt="">
+          <span class="lang-btn-code">EN</span>
+          <i class="fas fa-chevron-down" style="font-size:0.65rem;opacity:.6"></i>
+        </button>
+        <div class="lang-menu">
+          <div class="lang-option" data-lang="en" onclick="selectLanguage('en')">
+            <img class="flag-icon" src="assets/flags/en.png" alt="English"><span>English</span>
+          </div>
+          <div class="lang-option" data-lang="ku" onclick="selectLanguage('ku')">
+            <img class="flag-icon" src="assets/flags/ku.png" alt="Kurdish"><span>کوردی</span>
+          </div>
+          <div class="lang-option" data-lang="ar" onclick="selectLanguage('ar')">
+            <img class="flag-icon" src="assets/flags/ar.png" alt="Arabic"><span>العربية</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auth Buttons (logged-out) -->
+      <div id="nav-auth-buttons" class="nav-auth">
+        <button class="btn btn-outline btn-sm" onclick="openAuth()">
+          <span data-i18n="login">Login</span>
+        </button>
+        <button class="btn btn-gold btn-sm" onclick="openAuth()">
+          <span data-i18n="signup">Sign Up</span>
+        </button>
+      </div>
+
+      <!-- User Menu (logged-in) -->
+      <div id="nav-user-menu" class="user-menu-wrap" style="display:none">
+        <button class="user-btn" onclick="toggleUserDropdown()">
+          <i class="fas fa-user-circle"></i>
+          <span id="user-name"></span>
+          <i class="fas fa-chevron-down" style="font-size:0.65rem;opacity:.6"></i>
+        </button>
+        <div id="user-dropdown">
+          <a class="dropdown-item" href="account.html">
+            <i class="fas fa-box-open"></i>
+            <span data-i18n="my_orders">My Orders</span>
+          </a>
+          <a class="dropdown-item" id="admin-panel-link" href="admin/index.html" style="display:none">
+            <i class="fas fa-cog"></i>
+            Admin Panel
+          </a>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span data-i18n="logout">Logout</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Toggle (desktop / tablets; moved into drawer on phones) -->
+      <button class="theme-toggle" type="button" onclick="toggleTheme()"
+              title="Toggle light/dark theme" aria-label="Toggle light/dark theme" aria-pressed="false">
+        <i class="fas fa-moon"></i>
+      </button>
+
+      <!-- Cart Button -->
+      <button id="cart-btn" onclick="openCart()" title="Cart">
+        <i class="fas fa-shopping-bag"></i>
+        <span id="cart-count">0</span>
+      </button>
+
+      <!-- Notification Bell (logged-in only) -->
+      <div class="notif-wrap" id="notif-wrap" style="display:none">
+        <button id="notif-btn" type="button" onclick="toggleNotifPanel()"
+                title="Notifications" aria-label="Open notifications" aria-haspopup="true" aria-expanded="false">
+          <i class="fas fa-bell"></i>
+          <span id="notif-count" class="notif-count-badge"></span>
+        </button>
+        <div id="notif-panel" class="notif-panel" role="dialog" aria-label="Notifications">
+          <div class="notif-panel-header">
+            <div class="notif-panel-title">
+              <i class="fas fa-bell" style="color:var(--gold)"></i>
+              <span data-i18n="notifications_title">Notifications</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm notif-mark-all"
+                    id="notif-mark-all-btn" onclick="notifMarkAllRead()">
+              <i class="fas fa-check-double"></i>
+              <span data-i18n="notif_mark_all_read">Mark all as read</span>
+            </button>
+            <button type="button" class="notif-close-btn" onclick="closeNotifPanel()"
+                    aria-label="Close notifications" title="Close">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="notif-panel-body" id="notif-panel-body">
+            <div class="notif-loading"><i class="fas fa-spinner fa-spin"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hamburger (mobile) -->
+      <button id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     MOBILE MENU DRAWER
+══════════════════════════════════════════════ -->
+<div id="mobile-menu">
+  <!-- Search (mobile only — navbar search is hidden under 768px) -->
+  <div class="mobile-search">
+    <input type="text" id="search-input-mobile"
+           data-i18n-placeholder="search_placeholder"
+           placeholder="Search products..." autocomplete="off">
+    <button type="button" aria-label="Search"
+            onclick="document.getElementById('products')?.scrollIntoView({behavior:'smooth'}); closeMobileMenu();">
+      <i class="fas fa-search"></i>
+    </button>
+    <div id="search-results-mobile"></div>
+  </div>
+
+  <a class="mobile-nav-link" href="#hero"     data-i18n="nav_home"     onclick="closeMobileMenu()">Home</a>
+  <a class="mobile-nav-link" href="#products" data-i18n="nav_products" onclick="closeMobileMenu()">Products</a>
+  <a class="mobile-nav-link" href="#footer"   data-i18n="nav_contact"  onclick="closeMobileMenu()">Contact</a>
+
+  <!-- Language switcher -->
+  <div class="mobile-menu-row">
+    <span class="mobile-menu-row-label" data-i18n="language_label">Language</span>
+    <div class="lang-dropdown" id="lang-dropdown-mobile">
+      <button type="button" class="lang-btn" onclick="toggleLangMenu('lang-dropdown-mobile')"
+              aria-haspopup="true" aria-expanded="false" title="Language">
+        <img class="flag-icon lang-btn-flag" src="assets/flags/en.png" alt="">
+        <span class="lang-btn-code">EN</span>
+        <i class="fas fa-chevron-down" style="font-size:0.65rem;opacity:.6"></i>
+      </button>
+      <div class="lang-menu">
+        <div class="lang-option" data-lang="en" onclick="selectLanguage('en')">
+          <img class="flag-icon" src="assets/flags/en.png" alt="English"><span>English</span>
+        </div>
+        <div class="lang-option" data-lang="ku" onclick="selectLanguage('ku')">
+          <img class="flag-icon" src="assets/flags/ku.png" alt="Kurdish"><span>کوردی</span>
+        </div>
+        <div class="lang-option" data-lang="ar" onclick="selectLanguage('ar')">
+          <img class="flag-icon" src="assets/flags/ar.png" alt="Arabic"><span>العربية</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme toggle (mobile drawer) -->
+  <div class="mobile-theme-row">
+    <span class="mobile-theme-label" data-i18n="theme_label">Theme</span>
+    <button class="theme-toggle" type="button" onclick="toggleTheme()"
+            title="Toggle light/dark theme" aria-label="Toggle light/dark theme" aria-pressed="false">
+      <i class="fas fa-moon"></i>
+    </button>
+  </div>
+
+  <!-- Dynamic notifications row (logged-in only) -->
+  <div class="mobile-menu-row" id="mobile-notif-row" style="display:none">
+    <span class="mobile-menu-row-label"><i class="fas fa-bell" style="color:var(--gold)"></i>
+      <span data-i18n="notifications_title">Notifications</span>
+    </span>
+    <button type="button" class="btn btn-outline btn-sm" id="mobile-notif-open"
+            onclick="closeMobileMenu(); openNotifPanel()">
+      <span data-i18n="notif_open_notifications">Open notifications</span>
+    </button>
+  </div>
+
+  <!-- Dynamic auth area -->
+  <div id="mobile-auth">
+    <a class="mobile-nav-link" onclick="openAuth();closeMobileMenu()">
+      <span data-i18n="login">Login</span> / <span data-i18n="signup">Sign Up</span>
+    </a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     HERO SECTION
+══════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+
+    <!-- Hero Text -->
+    <div class="hero-text">
+      <div class="hero-eyebrow" data-i18n="hero_eyebrow">
+        Premium Gym Wear — Kurdistan
+      </div>
+      <h1 class="hero-headline">
+        <span data-i18n="hero_headline_1">ELEVATE</span><br>
+        <span class="gold" data-i18n="hero_headline_2">YOUR</span><br>
+        <span data-i18n="hero_headline_3">PERFORMANCE</span>
+      </h1>
+      <p class="hero-desc" data-i18n="hero_desc">
+        High-performance compression gear engineered for athletes who demand the best.
+        Made for champions in Kurdistan and beyond.
+      </p>
+      <div class="hero-cta">
+        <button class="btn btn-gold btn-lg"
+                onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+          <i class="fas fa-bolt"></i>
+          <span data-i18n="hero_cta_shop">Shop Now</span>
+        </button>
+        <button class="btn btn-outline"
+                onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">
+          <span data-i18n="hero_cta_about">Our Story</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero Visual — Animated Golden Lightning (decorative) -->
+    <div class="hero-visual">
+      <div class="shirt-showcase">
+
+        <!-- Floating badges -->
+        <div class="hero-badge badge-1"><i class="fas fa-star" style="color:#B0B8C4;margin-right:6px"></i><span data-i18n="badge_1">Premium Quality</span></div>
+        <div class="hero-badge badge-2"><i class="fas fa-truck" style="color:#fff;margin-right:6px"></i><span data-i18n="badge_2">Fast Delivery</span></div>
+        <div class="hero-badge badge-3"><i class="fas fa-bolt" style="color:#B0B8C4;margin-right:6px"></i><span data-i18n="badge_3">Pro Grade</span></div>
+
+        <!-- Lightning card -->
+        <div id="bolt-card" class="shirt-card">
+          <!-- 3D golden lightning — drag to rotate, tap to spark (Three.js) -->
+          <div class="bolt-3d-wrap">
+            <canvas id="bolt-3d-canvas"></canvas>
+            <div class="shirt-3d-hint">
+              <i class="fas fa-hand-pointer"></i>
+              <span data-i18n="tap_to_spark">Drag to rotate · tap to spark</span>
+            </div>
+            <!-- Fallback shown if WebGL/Three.js is unavailable -->
+            <div id="bolt-3d-fallback" class="shirt-3d-fallback" style="display:none">
+              <svg viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="boltGradFb" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ffe9a8"/>
+                     <stop offset="55%" style="stop-color:#B0B8C4"/>
+                    <stop offset="100%" style="stop-color:#8a6820"/>
+                  </linearGradient>
+                </defs>
+                <path d="M70 8 L26 104 L54 104 L40 192 L96 80 L66 80 Z"
+                      fill="url(#boltGradFb)" stroke="#ffd97a" stroke-width="2"
+                      stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="shirt-label">
+            <span data-i18n="bolt_label">Power Up</span>
+            <span style="color:#B0B8C4"> <span data-i18n="bolt_label2">Your Game</span></span>
+          </div>
+          <p class="shirt-sub" data-i18n="bolt_sub">Premium gear, delivered fast across Kurdistan</p>
+          <div class="shirt-card-cta" onclick="document.getElementById('products')?.scrollIntoView({behavior:'smooth'})">
+            <span data-i18n="shirt_cta">View Collection</span>
+            <i class="fas fa-arrow-right"></i>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CATEGORIES SLIDER
+══════════════════════════════════════════════ -->
+<section id="categories">
+  <div class="categories-inner">
+    <div class="cat-header">
+      <div>
+        <div class="section-title" style="font-size:clamp(1.4rem,3vw,2rem);margin-bottom:4px">
+          <span data-i18n="cat_title">Shop By</span>
+          <span style="color:#B0B8C4"> Category</span>
+        </div>
+      </div>
+    </div>
+    <div class="cat-slider-wrap">
+      <button id="cat-left"  class="cat-arrow left"  aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+      <div id="cat-slider" class="cat-slider">
+        <!-- Dynamically rendered by Main.js setupCategories() from /api/categories -->
+      </div>
+      <button id="cat-right" class="cat-arrow right" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PRODUCTS SECTION
+══════════════════════════════════════════════ -->
+<section id="products" class="section">
+  <div class="products-inner section-inner">
+
+    <!-- Section Header -->
+    <div class="reveal">
+      <div class="section-title">
+        <span data-i18n="products_title">Our</span>
+        <span style="color:#B0B8C4"> Products</span>
+      </div>
+      <div class="divider"></div>
+      <p class="section-subtitle" data-i18n="products_subtitle">
+        Premium gym apparel for your best performance
+      </p>
+    </div>
+
+    <!-- Toolbar: Filter chips + sort -->
+    <div class="products-toolbar reveal">
+      <div class="filter-sort" id="filter-chips">
+        <!-- Admin-made filter tags, rendered by Main.js setupFilters() -->
+      </div>
+      <div class="sort-wrap">
+        <select id="sort-select" class="sort-select" onchange="applySort(this.value)">
+          <option value="popular" data-i18n="sort_popular">Best Sellers</option>
+          <option value="price_asc" data-i18n="sort_price_asc">Price: Low to High</option>
+          <option value="price_desc" data-i18n="sort_price_desc">Price: High to Low</option>
+          <option value="new" data-i18n="sort_new">Newest</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products Grid (dynamically rendered) -->
+    <div id="products-grid" class="products-grid"></div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ABOUT SECTION
+══════════════════════════════════════════════ -->
+<section id="about">
+  <div class="about-inner">
+
+    <!-- Text -->
+    <div class="reveal">
+      <div class="about-badge">
+        <i class="fas fa-trophy"></i>
+        <span data-i18n="about_badge">Made for Champions</span>
+      </div>
+      <div class="section-title">
+        <span data-i18n="about_title">About</span>
+        <span style="color:#B0B8C4"> <span data-i18n="about_title2">Shax Store</span></span>
+      </div>
+      <div class="divider"></div>
+      <p style="color:#cccccc;line-height:1.8;margin-bottom:16px;font-size:1rem" data-i18n="about_p1">
+        Shax Store was born from a passion for fitness and a desire to bring world-class gym apparel to Kurdistan.
+        Every product is chosen for its quality, durability, and performance.
+      </p>
+      <p style="color:#cccccc;line-height:1.8;font-size:1rem" data-i18n="about_p2">
+        Our compression shirts and fitness gear are trusted by athletes across the region.
+        We believe that great training starts with the right gear.
+      </p>
+      <!-- Stats (Products & Happy Customers are real, pulled from /api/stats) -->
+      <div class="about-stats">
+        <div class="stat-item reveal">
+          <span class="stat-num" id="stat-products" data-count="0" data-suffix="+">0+</span>
+          <span class="stat-label" data-i18n="stat_products">Products</span>
+        </div>
+        <div class="stat-item reveal">
+          <span class="stat-num" id="stat-customers" data-count="0" data-suffix="+">0+</span>
+          <span class="stat-label" data-i18n="stat_customers">Happy Customers</span>
+        </div>
+        <div class="stat-item reveal">
+          <span class="stat-num" data-count="2" data-suffix="">0</span>
+          <span class="stat-label" data-i18n="stat_years">Years Experience</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual -->
+    <div class="about-visual reveal">
+      <div class="about-logo-wrap">
+        <!-- PLACE YOUR LOGO IMAGE HERE: public/assets/logo.png (a larger/high-res version is fine too) -->
+        <img src="assets/logo.png" alt="Shax Store">
+        <div class="about-logo-ring"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════ -->
+<footer id="footer">
+  <div class="footer-inner">
+
+    <!-- Brand -->
+    <div class="footer-brand">
+      <div class="nav-logo" style="margin-bottom:16px">
+        <!-- PLACE YOUR LOGO IMAGE HERE: public/assets/logo.png -->
+        <img src="assets/logo.png" alt="Shax Store">
+        <span class="nav-logo-text">SHAX<span style="color:#fff;font-weight:400"> STORE</span></span>
+      </div>
+      <p class="footer-desc" data-i18n="footer_desc">
+        Your premier destination for gym accessories and compression wear in Kurdistan.
+        Quality gear for serious athletes.
+      </p>
+      <div class="footer-social">
+        <!--
+          SOCIAL LINKS — paste each link inside the href="" below.
+          Example:  href="https://instagram.com/yourpage"
+          Leave target/rel as-is so it opens in a new tab safely.
+        -->
+        <a class="social-btn" href="https://www.instagram.com/shax.krd" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        
+        <a class="social-btn" href="https://www.tiktok.com/@shax_krd" target="_blank" rel="noopener" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div>
+      <div class="footer-col-title" data-i18n="footer_links">Quick Links</div>
+      <div class="footer-links">
+        <a class="footer-link" href="#hero"     data-i18n="nav_home">Home</a>
+        <a class="footer-link" href="#products" data-i18n="nav_products">Products</a>
+        <a class="footer-link" href="#footer"   data-i18n="nav_contact">Contact</a>
+      </div>
+    </div>
+
+    <!-- Support -->
+    <div>
+      <div class="footer-col-title" data-i18n="footer_support">Support</div>
+      <div class="footer-links">
+        <!-- Shipping Info is a real in-site page; its text is editable from the Admin Panel -->
+        <a class="footer-link" href="shipping.html" data-i18n="shipping_info">Shipping Info</a>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div>
+      <div class="footer-col-title" data-i18n="footer_contact">Contact</div>
+      <div class="footer-links">
+        <a class="footer-link" href="mailto:Shaxstore.support@gmail.com">
+          <i class="fas fa-envelope footer-link-icon"></i><span dir="ltr">Shaxstore.support@gmail.com</span>
+        </a>
+        <span class="footer-link" style="cursor:default">
+          <i class="fas fa-map-marker-alt footer-link-icon"></i><span data-i18n="footer_location">Erbil, Kurdistan</span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer Bottom -->
+  <div class="footer-bottom" style="max-width:1400px;margin:0 auto">
+    <span class="footer-copy" data-i18n="copy">© 2026 Shax Store. All rights reserved.</span>
+    <span class="footer-flag" dir="ltr"></span>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     TOAST CONTAINER
+══════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════
+     CART SIDEBAR
+══════════════════════════════════════════════ -->
+<div id="cart-overlay"></div>
+<div id="cart-sidebar">
+  <div class="cart-header">
+    <div class="cart-title">
+      <span data-i18n="cart_title">Your Cart</span>
+      <span id="cart-count-header"></span>
+    </div>
+    <button class="cart-close" onclick="closeCart()" aria-label="Close cart">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Cart Items (dynamically rendered) -->
+  <div class="cart-items" id="cart-items"></div>
+
+  <!-- Empty State -->
+  <div id="cart-empty" class="cart-empty" style="display:none">
+    <i class="fas fa-shopping-bag"></i>
+    <p data-i18n="cart_empty">Your cart is empty</p>
+    <p style="font-size:.82rem;color:#555;margin-bottom:24px" data-i18n="cart_empty_sub">Add some products to get started!</p>
+    <button class="btn btn-outline btn-sm" onclick="closeCart()">
+      <i class="fas fa-arrow-left"></i>
+      <span data-i18n="continue_shopping">Continue Shopping</span>
+    </button>
+  </div>
+
+  <!-- Cart Footer -->
+  <div id="cart-footer" class="cart-footer" style="display:none">
+    <div class="cart-summary-row">
+      <span data-i18n="cart_subtotal">Subtotal</span>
+      <span id="cart-subtotal">0 IQD</span>
+    </div>
+    <div class="cart-summary-row">
+      <span data-i18n="cart_shipping">Shipping</span>
+      <span id="cart-shipping-value" style="color:#27ae60;font-weight:600">FREE</span>
+    </div>
+    <div class="cart-summary-row total">
+      <span data-i18n="cart_total">Total</span>
+      <span id="cart-total">0 IQD</span>
+    </div>
+    <div id="cart-min-order-notice" style="display:none;font-size:.8rem;color:#e67e22;background:rgba(230,126,34,0.1);border:1px solid rgba(230,126,34,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center"></div>
+    <button class="btn btn-gold btn-lg checkout-btn" id="cart-checkout-btn" onclick="closeCart(); openCheckout()">
+      <i class="fas fa-lock"></i>
+      <span data-i18n="checkout">Checkout</span>
+    </button>
+    <button class="btn btn-outline" style="width:100%;margin-top:10px" onclick="closeCart()">
+      <span data-i18n="continue_shopping">Continue Shopping</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PRODUCT QUICK-VIEW MODAL
+══════════════════════════════════════════════ -->
+<div id="product-modal-overlay">
+  <div id="product-modal">
+    <!-- Dynamically rendered by Main.js openProductModal() -->
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     GUEST BROWSING PROMPT (optional, for visitors)
+══════════════════════════════════════════════ -->
+<div id="guest-overlay">
+  <div id="guest-modal">
+
+    <!-- Close (also persists "Continue as Guest") -->
+    <button class="modal-close" onclick="continueAsGuest()" aria-label="Close"
+            title="Close">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <img src="assets/logo.png" alt="Shax Store">
+      <div class="auth-logo-title">SHAX STORE</div>
+    </div>
+
+    <h2 class="guest-welcome" data-i18n="guest_welcome">Welcome to Shax Store</h2>
+    <p class="guest-tagline" data-i18n="guest_tagline">Create an account for faster checkout, order tracking and a personalised shopping experience. You can also keep browsing as a guest.</p>
+
+    <div class="guest-actions">
+      <button class="btn btn-gold guest-btn" onclick="guestSignIn()">
+        <i class="fas fa-sign-in-alt"></i>
+        <span data-i18n="guest_signin">Sign In</span>
+      </button>
+      <button class="btn btn-outline guest-btn" onclick="guestSignUp()">
+        <i class="fas fa-user-plus"></i>
+        <span data-i18n="guest_create">Create Account</span>
+      </button>
+      <button class="guest-continue" onclick="continueAsGuest()">
+        <span data-i18n="guest_continue">Continue as Guest</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     AUTH MODAL (Login / Sign Up)
+══════════════════════════════════════════════ -->
+<div id="auth-overlay">
+  <div id="auth-modal">
+
+    <!-- Close -->
+    <button class="modal-close" onclick="closeAuth()" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <!-- PLACE YOUR LOGO IMAGE HERE: public/assets/logo.png -->
+      <img src="assets/logo.png" alt="Shax Store">
+      <div class="auth-logo-title">SHAX STORE</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login-form"  data-i18n="login">Login</button>
+      <button class="auth-tab"        data-tab="signup-form" data-i18n="signup">Sign Up</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="login-form" class="auth-form active" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email</label>
+        <input class="form-input" id="login-email" type="email"
+               placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-pass">Password</label>
+        <input class="form-input" id="login-pass" type="password"
+               placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div id="login-error" class="form-error"></div>
+      <button type="submit" class="btn btn-gold auth-submit">
+        <i class="fas fa-sign-in-alt"></i>
+        <span data-i18n="login">Login</span>
+      </button>
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form id="signup-form" class="auth-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="signup-name">Full Name</label>
+        <input class="form-input" id="signup-name" type="text"
+               placeholder="Your Name" required autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signup-email">Email</label>
+        <input class="form-input" id="signup-email" type="email"
+               placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signup-pass">Password</label>
+        <input class="form-input" id="signup-pass" type="password"
+               placeholder="••••••••" required autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="signup-pass2">Confirm Password</label>
+        <input class="form-input" id="signup-pass2" type="password"
+               placeholder="••••••••" required autocomplete="new-password">
+      </div>
+      <div id="signup-error" class="form-error"></div>
+      <button type="submit" class="btn btn-gold auth-submit">
+        <i class="fas fa-user-plus"></i>
+        <span data-i18n="signup">Sign Up</span>
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CHECKOUT MODAL
+══════════════════════════════════════════════ -->
+<div id="checkout-overlay">
+  <div id="checkout-modal">
+    <!-- Dynamically rendered by Main.js openCheckout() -->
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════ -->
+<!-- Main JS (same folder as index.html) -->
+<!-- Three.js (3D hero T-shirt) — loaded from cdnjs (already allowed by CSP) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="bolt3d.js"></script>
+<!-- Native API origin override (inert on the website) — must load before Main.js -->
+<script src="shax-native-config.js"></script>
+<script src="Main.js"></script>
+<!-- Native push hooks (inert outside the Capacitor app) -->
+<script src="push-native.js"></script>
+
+</body>
+</html>

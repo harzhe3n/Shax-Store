@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment variables (contains DB credentials, JWT secret, admin password)
+.env
+.env.local
+
+# Firebase / Google service-account credentials (never commit these)
+firebase-service-account*.json
+google-services.json
+google-services.dev.json
+*.p8
+*.p12
+*.jks
+*.keystore
+
+# Admin-uploaded product/category images (keep the folder, ignore its contents)
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
