@@ -2,6 +2,8 @@
 
 A premium gym-products store: Express + MySQL REST API, web storefront (vanilla JS), a mobile app wrapper via Ionic Capacitor, and a full admin panel. Includes role-based accounts (customers, sponsors, admins), orders with tracking, notifications (in-app + optional native push), Telegram alerts, and a warehouse/storage module.
 
+*Updated on $(Get-Date -Format 'yyyy-MM-dd')*
+
 ## Project layout
 
 ```
