@@ -1980,7 +1980,12 @@ function showNotifBell() {
   const wrap = document.getElementById('notif-wrap');
   if (wrap) wrap.style.display = 'flex';
   const mobileRow = document.getElementById('mobile-notif-row');
-  if (mobileRow) mobileRow.style.display = 'flex';
+  if (mobileRow) {
+    mobileRow.style.display = 'flex';
+    // Also make sure the mobile notification button is visible
+    const mobileBtn = document.getElementById('mobile-notif-open');
+    if (mobileBtn) mobileBtn.style.display = 'inline-flex';
+  }
 }
 function hideNotifBell() {
   const wrap = document.getElementById('notif-wrap');
